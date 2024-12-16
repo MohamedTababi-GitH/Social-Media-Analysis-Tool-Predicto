@@ -1,8 +1,12 @@
+from pprint import pprint
+
 from dateutil.relativedelta import relativedelta
 from googleapiclient.discovery import build
 import pandas as pd
+from pyarrow import nulls
 from spyder_kernels.utils.lazymodules import pandas
 from tomlkit import datetime
+import datetime
 import youtubeAPI
 from numba.core.typing.builtins import Print
 #pip install google-api-python-client
@@ -39,19 +43,38 @@ def getCommentsThreadVideo(videoid,amount,API_KEY,topic):
     #print()
     #print(response)
     #print(response["items"][2]["snippet"]["topLevelComment"]["snippet"]["textDisplay"])
-    #print(response["items"][1]["snippet"]["topLevelComment"]["snippet"])
+    #print(response["items"][0]["snippet"]["topLevelComment"]["etag"])
+    #print(response["items"][0]["snippet"]["totalReplyCount"])
+    #print(response["items"][0]["snippet"]["topLevelComment"])
+    #print(response["items"][0]["snippet"]["topLevelComment"]["snippet"])
 
 
     service.close()
 
+    #hp.PostID,         A
+    #p.PlatformName,    A
+    #hp.Timestamp,      A
+    #spd.Username,      A
+    #spd.PostContent,   A
+    #spd.NumberOfComments,  A
+    #spd.NumberOfLikes,     A
+    # spd.URL,               A
+    #spd.NumberOfReposts,   A   is anyway blank
+    #spd.SearchedTopic      A
     comments=[]
     for item in response["items"]:
-        date = item["snippet"]["topLevelComment"]["snippet"]["publishedAt"]
-        authorName = item["snippet"]["topLevelComment"]["snippet"]["authorDisplayName"]
-        comment_text = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
-        likes = item["snippet"]["topLevelComment"]["snippet"]["likeCount"]
-        authorChannelUrl = item["snippet"]["topLevelComment"]["snippet"]["authorChannelUrl"]
-        comments.append({"date":date,"authorName":authorName,"comment": comment_text,"num_of_likes": likes,"authorChannelUrl":authorChannelUrl,"videoid":videoid,"topic":topic})
+        timestamp = item["snippet"]["topLevelComment"]["snippet"]["publishedAt"]
+        PostID=item["snippet"]["topLevelComment"]["etag"]
+        Username = item["snippet"]["topLevelComment"]["snippet"]["authorDisplayName"]
+        PostContent = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
+        NumberOfComments=item["snippet"]["totalReplyCount"]
+        NumberOfReposts=None
+        SearchedTopic=topic
+        platformName="youtube"
+        URL="https://www.youtube.com/watch?v=" + videoid
+        NumberOfLikes = item["snippet"]["topLevelComment"]["snippet"]["likeCount"]
+        #authorChannelUrl = item["snippet"]["topLevelComment"]["snippet"]["authorChannelUrl"]
+        comments.append({"PostID":PostID,"Timestamp":timestamp,"PlatformName": platformName, "Username":Username,"PostContent": PostContent,"NumberOfComments":NumberOfComments,"NumberOfLikes": NumberOfLikes,"videoid":videoid,"SearchedTopic":SearchedTopic,"NumberOfReposts":NumberOfReposts,"URL":URL})
     df = pd.DataFrame(comments)
     #print(df.iloc[0,:])
     return df
@@ -113,7 +136,7 @@ def getVideo(topic, amount,afterTime=None, beforeTime=None,API_KEY=None):
 
 #use this simple method. will get x amount of videos and of those videos it will get y amount of comments each. 25 vid * 100 comments = about 25000 comments
 #will get from a years worth of data
-def getCommentDataMaster(topic,vidAmount,commentAmount,year,month,day):
+def getCommentDataMasterold(topic,vidAmount,commentAmount,year,month,day):
     start = datetime(year, month, day)
     end = start + relativedelta(months=1)
     #print(start.strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -159,7 +182,62 @@ def getCommentDataMaster(topic,vidAmount,commentAmount,year,month,day):
 
     commentlist.to_csv("./data/comments/" + topic +"Entries"+str(commentlist.shape[0])+ ".csv", index=False)
 
+def getCommentDataMaster(topic,   start_date,   end_date,   number_of_data):
+    #this funtion get comments from videos between start_date and end_date
+    #each month we get a limited amount of videos. by doing this we get data that is evenly spread out over the months
+    #from each of these videos we get a certain number of comments. pls note that some videos have comments deactivated
 
+
+    #amount of month between the start and end
+    temp= relativedelta(end_date,start_date)
+    print(temp.months)
+    #amount of comments per video
+    commentAmount =100
+    #amount of videos per month
+    vid_countMonth=number_of_data/commentAmount/(temp.months-1)
+    print(vid_countMonth)
+
+    dflist = []
+    commentlist = pandas.DataFrame()
+    #iterate through months
+    for i in range(0,temp.months):
+        #get month videos. if we reach the api daily limit then it will stop
+        try:
+            df = youtubeAPI.getVideo(topic, vid_countMonth, start_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                     end_date.strftime("%Y-%m-%dT%H:%M:%SZ"), API_KEY=API_KEY[0])
+            dflist.append(df)
+
+        except:
+            print("cant fetch anymore data (data limit) OR we are trying to get data from future")
+            commentlist.to_csv("./data/comments/" + topic + "Entries" + str(commentlist.shape[0]) + ".csv", index=False)
+            print("here")
+            return
+
+        #this line of code is not really relavent
+        dflist.append(df)
+
+        #get X comments from each retrieved video
+        for y in range(0, dflist[i].shape[0]):
+            try:
+                #get X comments from video y
+                comdf = getCommentsThreadVideo(dflist[i].loc[y, "videoId"], commentAmount, API_KEY[1], topic)
+
+                #add retireved comments to master dataframe
+                commentlist = pd.concat([commentlist, comdf])
+
+                # print(dflist[i].loc[y,"videoId"])
+                # print(commentlist.shape[0])
+            except:
+                print("no comments for video: " + dflist[i].loc[y, "videoId"])
+
+        #print(commentlist.shape[0])
+
+        #go over to next month and repeat
+        start_date = end_date
+        end_date = start_date + relativedelta(months=1)
+
+    #store dataframe as csv
+    commentlist.to_csv("./data/comments/" + topic +"Entries"+str(commentlist.shape[0])+ ".csv", index=False)
 
 #not finished. might get implemented later. was just messing around here
 def videoCategorie():
