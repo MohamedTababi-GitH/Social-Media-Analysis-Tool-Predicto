@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predicto!</title>
+   
+</head>
+<body>
+
+    <h1 style="text-align: center;"> Predicto! </h1>
+
+    <form style="font-size: 1.2em; padding: 15px; margin-top: 20px;" method="POST" action="/analyze-trend">
+        <label for="search" style="margin-right: 8px; font-size: 1.2em;">Search:</label>
+        <input type="text" id="term" name="term" required 
+               style="padding: 10px; font-size: 1.1em; width: 200px; border-radius: 5px; border: 1px solid #ccc;">
+        <button type="submit" 
+                style="padding: 10px 20px; font-size: 1.1em; border-radius: 5px; background-color: #4CAF50; color: white; border: none; transition: background-color 0.3s ease;"
+                onmouseover="this.style.backgroundColor='#45a049'" onmouseout="this.style.backgroundColor='#4CAF50'">
+            Fetch
+        </button>
+    </form>
+</body>
+</html>
