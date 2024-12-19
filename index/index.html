@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">Predicto!</div>
+        <nav>
+            <ul class="nav">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="title">Predicto!</h1>
+            <p class="tagline">See the Trends. Sense the Sentiment. Shape the Future.</p>
+            <img class="logo_sources_small" src="img/Reddit_Icon_FullColor.png">
+            <img class="logo_sources_small" src="img/bluesky-icon.png">
+            <img class="logo_sources" src="img/yt_logo_rgb_dark.png">
+            <img class="logo_sources_small" src="img/Xlogo-white.png">
+
+        </div>
+    </section>
+
+    <!-- database -->
+    <section id="data" class="section data">
+        <h2>Choose Your Data</h2>
+        <p>
+            With Predicto! you can choose if you want to fetch the data from the database
+            or in real-time for up-to-date insights.
+        </p>
+
+        <!-- pick your date-->
+        <div class="calendar">
+            <label for="start-date">Start Date:</label>
+            <input type="date" id="start-date" name="start-date">
+
+            <label for="end-date">End Date:</label>
+            <input type="date" id="end-date" name="end-date">
+        </div>
+
+        <!-- button -->
+        <div class="data-controls">
+            <button class="btn-fetch">Fetch Database Data</button>
+
+            <!-- dropdown menu -->
+            <div class="dropdown">
+                <button class="btn-dropdown">Fetch Data in Real-Time ▼</button>
+                <div class="dropdown-menu">
+                    <a href="#">YouTube</a>
+                    <a href="#">Reddit</a>
+                    <a href="#">Bluesky</a>
+                </div>
+            </div>
+        </div>
+        <div class="database_results">
+            <img src="img/database_img.png" alt="Database Results">
+        </div>
+
+    </section>
+
+    <!-- sentiment -->
+    <section id="sentiment" class="section sentiment">
+        <h2>Sentiment Analysis</h2>
+        <p>Understand audience sentiment and tailor your strategies accordingly.</p>
+        <div class="calendar">
+            <label for="start-date">Start Date:</label>
+            <input type="date" id="start-date" name="start-date">
+
+            <label for="end-date">End Date:</label>
+            <input type="date" id="end-date" name="end-date">
+        </div>
+
+        <div class="data-controls">
+            <div class="dropdown">
+                <button class="btn-dropdown">Choose Topic ▼</button>
+                <div class="dropdown-menu">
+                    <a href="#">Politics</a>
+                    <a href="#">Food</a>
+                    <a href="#">Entertainment</a>
+                    <a href="#">Technology</a>
+                    <a href="#">Environment</a>
+                </div>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn-dropdown">Choose Platform ▼</button>
+                <div class="dropdown-menu">
+                    <a href="#">YouTube</a>
+                    <a href="#">Reddit</a>
+                    <a href="#">Bluesky</a>
+                    <a href="#">X</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Highcharts Container -->
+        <div id="sentiment-chart"></div>
+    </section>
+
+    <!-- Highcharts Library -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script>
+        // Highcharts Configuration
+        Highcharts.chart('sentiment-chart', {
+            title: {
+                text: 'Sentiment Analysis',
+                align: 'left'
+            },
+
+            subtitle: {
+                text: 'Positive, Neutral, and Negative Sentiment Distribution',
+                align: 'left'
+            },
+
+            yAxis: {
+                title: {
+                    text: 'Number of Mentions'
+                }
+            },
+
+            xAxis: {
+                title: {
+                    text: 'Time'
+                }
+            },
+
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+
+            series: [{
+                name: 'Positive',
+                color: 'green',
+                data: [120, 150, 90]
+
+            }, {
+                name: 'Neutral',
+                color: 'grey',
+                data: [80, 110, 70]
+            }, {
+                name: 'Negative',
+                color: 'red',
+                data: [40, 50, 30]
+            }],
+
+            responsive: {
+                rules: [{
+                    condition: {
+                        maxWidth: 300
+                    },
+                    chartOptions: {
+                        legend: {
+                            layout: 'horizontal',
+                            align: 'center',
+                            verticalAlign: 'bottom'
+                        }
+                    }
+                }]
+            }
+        });
+    </script>
+
+    </section>
+
+    <!-- topic modeling -->
+    <section id="topics" class="section ">
+        <h2>Topic Modeling</h2>
+        <p> Uncover the main subjects within the data </p>
+        <div class="calendar">
+            <label for="start-date">Start Date:</label>
+            <input type="date" id="start-date" name="start-date">
+
+            <label for="end-date">End Date:</label>
+            <input type="date" id="end-date" name="end-date">
+        </div>
+
+        <!-- Highcharts Container -->
+        <div id="topics-chart"></div>
+
+
+        <!-- Highcharts Library -->
+        <script src="https://code.highcharts.com/highcharts.js"></script>
+        <script>
+            Highcharts.chart('topics-chart', {
+                chart: {
+                    type: 'bar'
+                },
+                title: {
+                    text: 'Topic Modeling Analysis'
+                },
+                xAxis: {
+                    categories: ['word1', 'word2', 'word3', 'word4', 'word5'],
+                    title: {
+                        text: 'Top Words'
+                    },
+                    gridLineWidth: 1,
+                    lineWidth: 0
+                },
+                yAxis: {
+                    min: 0,
+                    title: {
+                        text: 'Frequency',
+                        align: 'high'
+                    },
+                    labels: {
+                        overflow: 'justify'
+                    },
+                    gridLineWidth: 0
+                },
+                tooltip: {
+                    valueSuffix: ' mentions'
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: '5%',
+                        dataLabels: {
+                            enabled: true
+                        },
+                        groupPadding: 0.1
+                    }
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'top',
+                    x: -40,
+                    y: 80,
+                    floating: true,
+                    borderWidth: 1,
+                    backgroundColor:
+                        Highcharts.defaultOptions.legend.backgroundColor || '#FFFFFF',
+                    shadow: true
+                },
+                credits: {
+                    enabled: false
+                },
+                series: [{
+                    name: 'Politics',
+                    data: [10, 8, 6, 4, 2],
+                    color: '#007bff'
+                }, {
+                    name: 'Food',
+                    data: [7, 5, 3, 2, 1],
+                    color: '#28a745'
+                }, {
+                    name: 'Entertainment',
+                    data: [9, 6, 5, 3, 2],
+                    color: 'red'
+                }, {
+                    name: 'Technology',
+                    data: [9, 6, 5, 3, 2],
+                    color: '#ffc107'
+                }, {
+                    name: 'Environment',
+                    data: [9, 6, 5, 3, 2],
+                    color: 'orange'
+                }]
+            });
+        </script>
+
+    </section>
+
+    <!-- trends(here i added top topics but we can change) -->
+    <section id="trends" class="section trends">
+        <h2>Top Topics</h2>
+        <p>Get the most discussed topics or check the frequency of a certain topic</p>
+        <div class="calendar">
+            <label for="start-date">Start Date:</label>
+            <input type="date" id="start-date" name="start-date">
+
+            <label for="end-date">End Date:</label>
+            <input type="date" id="end-date" name="end-date">
+        </div>
+
+        <div class="dropdown">
+            <button class="btn-dropdown">Choose Platform ▼</button>
+            <div class="dropdown-menu">
+                <a href="#">YouTube</a>
+                <a href="#">Reddit</a>
+                <a href="#">Bluesky</a>
+                <a href="#">X</a>
+            </div>
+        </div>
+        <button class="btn-top10">Get Top 10 topics</button>
+        <button class="btn-top">Get Top Predefined Topics</button>
+        <!-- Highcharts Container -->
+        <div id="trends-chart"></div>
+    </section>
+
+    <!-- Highcharts Library -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script>
+        // Highcharts Column Chart
+        Highcharts.chart('trends-chart', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Top Topics Frequency Across Platforms'
+            },
+            subtitle: {
+                text: 'Source: Predicto Platform'
+            },
+            xAxis: {
+                categories: ['YouTube', 'Reddit', 'Bluesky'],
+                crosshair: true,
+                accessibility: {
+                    description: 'Platforms'
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Frequency (mentions)'
+                }
+            },
+            tooltip: {
+                valueSuffix: ' mentions'
+            },
+            plotOptions: {
+                column: {
+                    pointPadding: 0.2,
+                    borderWidth: 0
+                }
+            },
+            series: [
+                {
+                    name: 'Topic A',
+                    data: [120, 95, 80],
+                    color: '#007bff'
+                },
+                {
+                    name: 'Topic B',
+                    data: [110, 85, 90],
+                    color: '#28a745'
+                },
+                {
+                    name: 'Topic C',
+                    data: [90, 75, 60],
+                    color: '#ffc107'
+                }
+            ]
+        });
+    </script>
+
+    </section>
+
+
+    <!-- about us -->
+    <section id="about" class="section about">
+        <h2>About Us</h2>
+        <p>
+            Predicto! is your ultimate platform for accurate predictions. We provide insights and analysis
+            powered by data to meet your needs and help you make smarter decisions.
+        </p>
+    </section>
+
+    <!-- services -->
+    <section id="services" class="section services">
+        <h2>Our Services</h2>
+        <ul>
+            <li>✅ Data Analysis and Predictions</li>
+            <li>✅ Customized Reports</li>
+            <li>✅ AI-Powered Insights</li>
+        </ul>
+    </section>
+
+    <!-- contact -->
+    <section id="contact" class="section contact">
+        <h2>Contact Us</h2>
+        <p>📧 Email: <a href="mailto:info@predicto.com">info@predicto.com</a></p>
+        <p>📞 Phone: +1 (123) 456-7890</p>
+    </section>
+
+    <!-- Icon -->
+    <div class="top-icon">
+        <img src="img/main.png" alt="Icon">
+    </div>
+</body>
+
+</html>

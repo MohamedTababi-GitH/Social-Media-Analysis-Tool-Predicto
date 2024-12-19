@@ -1,0 +1,279 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styling */
+body {
+    font-family: Arial, sans-serif;
+    color: black;
+    scroll-behavior: smooth;
+    background-color: white;
+}
+
+/* Header */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    z-index: 1000;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.nav {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.nav a {
+    text-decoration: none;
+    color: white;
+    font-size: 20px;
+    transition: color 0.3s;
+}
+
+.nav a:hover {
+    color: #f0ad4e;
+}
+
+/* Hero Section */
+.hero {
+    background-image: url('img/main.png');
+    background-size: cover;
+    background-position: center;
+    height: 90vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+}
+
+.hero-content .subtitle {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.hero-content .title {
+    font-size: 70px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.hero-content .tagline {
+    font-size: 14px;
+    letter-spacing: 2px;
+    padding: 2%;
+
+}
+
+.logo_sources{
+    width:9%;
+
+}
+
+.hero-content img{
+    margin-right: 1%;
+
+}
+
+.logo_sources_small{
+    width:3%;
+}
+
+/* sections */
+.section {
+    padding: 60px 20px;
+    text-align: center;
+    background-color: white;
+}
+
+.section h2 {
+    font-size: 32px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.section p,
+.section ul {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #555;
+}
+
+.section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.section ul li {
+    margin-bottom: 10px;
+}
+
+/* database */
+.section {
+    padding: 60px 20px;
+    text-align: center;
+    background-color: white;
+}
+
+.data h2 {
+    font-size: 32px;
+    color: #333;
+    margin-bottom: 15px;
+    margin: 3% 8%;
+}
+
+.data p {
+    font-size: 18px;
+    color: #555;
+    margin: 3% 8%;
+}
+
+/* calendar */
+.calendar {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 3% 5%;
+}
+
+.calendar label {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.calendar input[type="date"] {
+    padding: 5px 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.calendar input[type="date"]:focus {
+    border-color: #007bff;
+}
+
+/* data section buttons */
+
+.data-controls {
+    display: flex;
+    justify-content: center;
+    gap: 2%;
+
+}
+
+.btn-fetch,.btn-top10,.btn-top,
+.btn-dropdown {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    background-color: #090916;
+    color: white;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-fetch:hover,.btn-top10:hover,.btn-top:hover,
+.btn-dropdown:hover {
+    background-color: #f0ad4e;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    z-index: 1000;
+    min-width: 200px;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.dropdown-menu a:hover {
+    background-color: #f1f1f1;
+}
+
+/* show dropdown on hoover */
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.database_results {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+}
+
+/* sentiment */
+#sentiment-chart {
+    margin: 20px auto; 
+    display: block; 
+    max-width: 70%;
+    height: 100%; 
+}
+
+/* topics */
+#topics-chart{
+    margin: 20px auto; 
+    display: block; 
+    max-width: 70%;
+    height: 100%; 
+
+}
+
+/* top topics */
+#trends-chart{
+    margin: 20px auto; 
+    display: block; 
+    max-width: 70%;
+    height: 100%; 
+}
+
+/* Icon */
+.top-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.top-icon img {
+    width: 30px;
+    height: 30px;
+}
