@@ -1,15 +1,11 @@
-from pprint import pprint
 
 from dateutil.relativedelta import relativedelta
 from googleapiclient.discovery import build
 import pandas as pd
-from pyarrow import nulls
 from spyder_kernels.utils.lazymodules import pandas
-from tomlkit import datetime
-import datetime
+from datetime import datetime
 import youtubeAPI
-from numba.core.typing.builtins import Print
-#pip install google-api-python-client
+
 
 API_KEY=    ["AIzaSyBCTyv5uEZhMh8IJaWuMA_yegzxUonja1k",
             "AIzaSyBbfYbVAIMgz5mHfRErP-CIo1-m7M4vgUY",
@@ -134,54 +130,6 @@ def getVideo(topic, amount,afterTime=None, beforeTime=None,API_KEY=None):
     #print(df.to_json())
     return df
 
-#use this simple method. will get x amount of videos and of those videos it will get y amount of comments each. 25 vid * 100 comments = about 25000 comments
-#will get from a years worth of data
-def getCommentDataMasterold(topic,vidAmount,commentAmount,year,month,day):
-    start = datetime(year, month, day)
-    end = start + relativedelta(months=1)
-    #print(start.strftime("%Y-%m-%dT%H:%M:%SZ"))
-    #print(end.strftime("%Y-%m-%dT%H:%M:%SZ\n"))
-
-    dflist=[]
-    commentlist = pandas.DataFrame()
-    for i in range(12):
-
-        try:
-            df = youtubeAPI.getVideo(topic, vidAmount, start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                                 end.strftime("%Y-%m-%dT%H:%M:%SZ"), API_KEY=API_KEY[0])
-            dflist.append(df)
-        except:
-            Print("cant fetch anymore data (data limit) OR we are trying to get data from future")
-            commentlist.to_csv("./data/comments/" + topic +"Entries"+str(commentlist.shape[0])+ ".csv", index=False)
-            return
-
-        dflist.append(df)
-
-        for y in range(0,dflist[i].shape[0]):
-            try:
-                #comdf=getCommentsThreadVideo(dflist[i].loc[y,"videoId"],100,API_KEY[1],"Food")
-                #comdf.to_csv("./data/comments/Food/FoodComFile" + str(i + 1) +"Entrie"+str(y)+ ".csv", index=False)
-
-                comdf=getCommentsThreadVideo(dflist[i].loc[y,"videoId"],commentAmount,API_KEY[1],topic)
-                #comdf.to_csv("./data/comments/Politics/PolComFile" + str(i + 1) +"Entrie"+str(y)+ ".csv", index=False)
-                commentlist=pd.concat([commentlist,comdf])
-
-                #print(dflist[i].loc[y,"videoId"])
-                #print(commentlist.shape[0])
-            except:
-                print("no comments for video: "+dflist[i].loc[y,"videoId"])
-
-
-        print(commentlist.shape[0])
-
-
-
-        start = end
-        end = start + relativedelta(months=1)
-
-
-    commentlist.to_csv("./data/comments/" + topic +"Entries"+str(commentlist.shape[0])+ ".csv", index=False)
-
 def getCommentDataMaster(topic,   start_date,   end_date,   number_of_data):
     #this funtion get comments from videos between start_date and end_date
     #each month we get a limited amount of videos. by doing this we get data that is evenly spread out over the months
@@ -190,27 +138,38 @@ def getCommentDataMaster(topic,   start_date,   end_date,   number_of_data):
 
     #amount of month between the start and end
     temp= relativedelta(end_date,start_date)
-    print(temp.months)
+    #print(temp.months)
     #amount of comments per video
     commentAmount =100
-    #amount of videos per month
-    vid_countMonth=number_of_data/commentAmount/(temp.months-1)
-    print(vid_countMonth)
+
+
+    #lower the numdata -> higher vid & lower comment
+    #lower comment -> higher vid
+
+
+    #amount of videos per month. PS you can only get at minimum 100 comments per month
+    comMonth=number_of_data/temp.months
+    vid_countMonth = 1/(1/comMonth / (1/commentAmount))
+    if(vid_countMonth< 1):
+        vid_countMonth=1
+
 
     dflist = []
     commentlist = pandas.DataFrame()
     #iterate through months
     for i in range(0,temp.months):
         #get month videos. if we reach the api daily limit then it will stop
+
         try:
             df = youtubeAPI.getVideo(topic, vid_countMonth, start_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
                                      end_date.strftime("%Y-%m-%dT%H:%M:%SZ"), API_KEY=API_KEY[0])
             dflist.append(df)
 
+
         except:
             print("cant fetch anymore data (data limit) OR we are trying to get data from future")
             commentlist.to_csv("./data/comments/" + topic + "Entries" + str(commentlist.shape[0]) + ".csv", index=False)
-            print("here")
+            #print("here")
             return
 
         #this line of code is not really relavent
@@ -237,7 +196,9 @@ def getCommentDataMaster(topic,   start_date,   end_date,   number_of_data):
         end_date = start_date + relativedelta(months=1)
 
     #store dataframe as csv
-    commentlist.to_csv("./data/comments/" + topic +"Entries"+str(commentlist.shape[0])+ ".csv", index=False)
+    #commentlist.to_csv("./data/comments/" + topic +"Entries"+str(commentlist.shape[0])+ ".csv", index=False)
+    return commentlist
+
 
 #not finished. might get implemented later. was just messing around here
 def videoCategorie():
@@ -271,10 +232,13 @@ def videoCategorie():
 
 
 def test():
-    getCommentsThreadVideo("Csau5f0TM8E",25,"AIzaSyBCTyv5uEZhMh8IJaWuMA_yegzxUonja1k")
+    #getCommentsThreadVideo("Csau5f0TM8E",25,"AIzaSyBCTyv5uEZhMh8IJaWuMA_yegzxUonja1k")
     #getCommentsVideo("NPOHf20slZg")
     #print(getVideo("politics",2,"2024-01-01T00:00:01Z")["videoId"])
-
+    start=datetime(2023,1,1)
+    end=datetime(2023,2,1)
+    df =getCommentDataMaster("Food",start,end,25)
+    print(df)
     #Csau5f0TM8E
     #q-oSwyZ8NZw
     #videoCategorie()
