@@ -1,6 +1,6 @@
 # Social-Media-Analysis-Tool-Predicto!
 
-# In order to run predicto_app.py please install requirements.txt. Follow these steps:
+### In order to run predicto_app.py please install requirements.txt. Follow these steps:
 
 1. Create a virtual environment(recommended)
 
