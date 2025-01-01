@@ -8,20 +8,30 @@ from API_Handler import API_Handler
 from youtubeAPI import getCommentDataMaster  # Import the function
 import pandas as pd
 from docx import Document
+import re
 
 
 
 app = Flask(__name__)
 
-app.config['ssh_config'] = {
+
+def extract_subreddit_from_url(url):
+    match = re.search(r"reddit\.com/r/([a-zA-Z0-9_]+)", url)
+    if match:
+        return match.group(1)  # Return the subreddit name
+    else:
+        raise ValueError("Invalid Reddit URL")
+
+
+app.config['SSH_CONFIG'] = {
     'ssh_host': '141.59.26.123',
-        'ssh_user': 'tektmu01',
-        'ssh_password': 'thu123!',
-        'remote_host': '127.0.0.1',
-        'remote_port': 3306,
-        'mysql_user': 'root',
-        'mysql_password': 'socialmedia',
-        'mysql_db': 'Predicto'
+    'ssh_user': 'tektmu01',
+    'ssh_password': 'thu123!',
+    'remote_host': '127.0.0.1',
+    'remote_port': 3306,
+    'mysql_user': 'root',
+    'mysql_password': 'socialmedia',
+    'mysql_db': 'Predicto'
 }
 
 """
@@ -31,9 +41,12 @@ Establish an SSH tunnel and connect to MySQL database through SQLAlchemy.
 # API Handler initialization
 handler = API_Handler()
 
+ssh_tunnel = None
+db_engine = None
+
 def get_ssh_db_connection():
     if 'db_engine' not in g:
-        ssh_config = app.config['SSH_CONFIG']
+        ssh_config = app.config['SSH_CONFIG']  # Access configuration from Flask app
 
         # Start SSH tunnel
         g.tunnel = SSHTunnelForwarder(
@@ -51,36 +64,10 @@ def get_ssh_db_connection():
     return g.tunnel, g.db_engine
 
 
-
-@app.route('/api/query_posts', methods=['POST'])
-def query_posts_endpoint():
-    try:
-        data = request.json
-
-        platforms = data.get('platforms', None) 
-        start_date = data.get('start_date', None) 
-        end_date = data.get('end_date', None)  
-        topic = data.get('topic', None)  
-        limit = data.get('limit', None) 
-
-        # Get the SSH DB connection and engine
-        tunnel, db_engine = get_ssh_db_connection()
-
-        results = query_posts(
-            engine=db_engine,
-            platforms=platforms,
-            start_date=start_date,
-            end_date=end_date,
-            topic=topic,
-            limit=limit
-        )
-
-        return jsonify(results.to_dict(orient='records')), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
+@app.before_request
+def setup():
+    """Setup the SSH connection and database engine before the first request."""
+    get_ssh_db_connection()
 
 # Clean up after each request
 @app.teardown_appcontext
@@ -93,22 +80,98 @@ def close_db_connection(exception):
     if tunnel:
         tunnel.stop()
 
+
+
+@app.route('/api/query_posts', methods=['POST'])
+def query_posts_endpoint():
+    try:
+        #not really working but ssh starts now with the first request (def setup())
+        tunnel, db_engine = get_ssh_db_connection()
+
+        # Parse request data
+        data = request.json
+        platforms = data.get('platforms', None)
+        start_date = data.get('start_date', None)
+        end_date = data.get('end_date', None)
+        topic = data.get('topic', None)
+        limit = data.get('limit', None)
+
+        # Construct the query
+        query = """
+            SELECT 
+                hp.PostID, 
+                p.PlatformName, 
+                hp.Timestamp, 
+                spd.Username, 
+                spd.PostContent, 
+                spd.NumberOfComments, 
+                spd.NumberOfLikes, 
+                spd.NumberOfReposts, 
+                spd.URL, 
+                spd.SearchedTopic
+            FROM Hub_Post hp
+            JOIN Platform p ON hp.PlatformID = p.PlatformID
+            JOIN Sat_PostDetails spd ON hp.PostID = spd.PostID
+            WHERE 1=1
+        """
+        params = {}
+
+        if platforms:
+            placeholders = ", ".join([f":platform_{i}" for i in range(len(platforms))])
+            query += f" AND p.PlatformName IN ({placeholders})"
+            for i, platform in enumerate(platforms):
+                params[f"platform_{i}"] = platform
+        if start_date:
+            query += " AND hp.Timestamp >= :start_date"
+            params['start_date'] = start_date
+        if end_date:
+            query += " AND hp.Timestamp <= :end_date"
+            params['end_date'] = end_date
+        if topic:
+            query += " AND spd.SearchedTopic = :topic"
+            params['topic'] = topic
+        if limit:
+            query += " LIMIT :limit"
+            params['limit'] = limit
+
+        # Execute the query
+        with db_engine.connect() as connection:
+            result = connection.execute(text(query), params)
+
+            for row in result:
+                print(row)
+
+            posts = [dict(row) for row in result]  # This may need to be adjusted based on the above print output
+
+        return jsonify(posts), 200
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+
 @app.route('/api/reddit_posts', methods=['POST'])
 def fetch_reddit_post():
     data = request.json
     url = data.get('url')
+    num_posts = data.get('num_posts', 10)  # Default to 10 if not specified
+
+    
     if not url:
-        return jsonify ("error"), 400
+        return jsonify({"error": "URL is required"}), 400
+
     try:
-        post = handler.fetch_reddit_post(url=url)
-        return jsonify({
-            "title":post.title,
-            "selftext": post.selftext,
-            "author": str(post.author),
-            "score": post.score
-        })
+        # Extract subreddit from the URL
+        subreddit = extract_subreddit_from_url(url)
+
+        posts_data = handler.fetch_reddit_posts(subreddit=subreddit, num_posts=num_posts)
+
+        return jsonify(posts_data), 200
+    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+    
 
 @app.route('/api/bsky_posts', methods=['POST'])
 def fetch_bsky_posts():
@@ -181,7 +244,7 @@ def top_topics():
         return jsonify(top_topics_df.to_dict(orient='records'))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
 
 
 if __name__ == '__main__':

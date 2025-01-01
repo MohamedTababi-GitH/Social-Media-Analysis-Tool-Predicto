@@ -57,7 +57,7 @@ class API_Handler:
 
         # Convert the collected data into a DataFrame
         df = pd.DataFrame(submissions_data)
-        return df
+        return df.to_dict(orient='records')
 
 handler = API_Handler()
 
