@@ -17,10 +17,10 @@ class API_Handler:
         self.bsky_client.login('abol3nin7744@gmail.com', 'Ahmed12345')
         self.bsky_client.service = 'https://public.api.bsky.app'
 
-    def fetch_bsky_posts(self, query, limit=100):
+    def fetch_bsky_posts(self, topic, limit=100):
         cursor = None
         params = {
-            'q': query,
+            'q': topic,
             'limit': limit,
             'sort': 'latest',
             'cursor': cursor

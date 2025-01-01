@@ -3,9 +3,9 @@ import requests
 
 
 ###### test establishing the ssh connection and data fetching(passed)
-"""
-import requests
 
+
+"""
 # Endpoint URL
 url = "http://127.0.0.1:5000/api/query_posts"
 
@@ -27,11 +27,10 @@ except Exception as e:
     print(f"Error making the request: {e}")
 
 """
-
 ##### test fetch reddit api(passed)
 """
 url = "http://127.0.0.1:5000/api/reddit_posts"
-num_posts:25
+limit:25
 headers = {"Content-Type": "application/json"}
 data = {
     "url": "https://www.reddit.com/r/test/comments/abcdef/example_post/"
@@ -54,7 +53,7 @@ except Exception as e:
 url = "http://127.0.0.1:5000/api/bsky_posts"
 headers = {"Content-Type": "application/json"}
 data = {
-    "query": "test", 
+    "topic": "test", 
     "limit": 5       
 }
 
@@ -74,10 +73,10 @@ except Exception as e:
 url = "http://127.0.0.1:5000/api/youtube_comments"
 headers = {"Content-Type": "application/json"}
 data = {
-    "query": "Example Topic",  # The topic you're fetching YouTube comments for
-    "start_date": "2023-01-01T00:00:00",  # Start date in ISO format
-    "end_date": "2023-12-31T23:59:59",    # End date in ISO format
-    "number_of_data": 5  # Optional, default is 100 if not specified     
+    "topic": "Example Topic", 
+    "start_date": "2023-01-01T00:00:00",  
+    "end_date": "2023-12-31T23:59:59",    
+    "limit": 5  # Optional, default is 100 if not specified     
 }
 
 try:

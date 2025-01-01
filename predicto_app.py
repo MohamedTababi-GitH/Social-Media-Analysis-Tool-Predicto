@@ -154,7 +154,7 @@ def query_posts_endpoint():
 def fetch_reddit_post():
     data = request.json
     url = data.get('url')
-    num_posts = data.get('num_posts', 10)  # Default to 10 if not specified
+    limit = data.get('limit', 10)  # Default to 10 if not specified
 
     
     if not url:
@@ -164,7 +164,7 @@ def fetch_reddit_post():
         # Extract subreddit from the URL
         subreddit = extract_subreddit_from_url(url)
 
-        posts_data = handler.fetch_reddit_posts(subreddit=subreddit, num_posts=num_posts)
+        posts_data = handler.fetch_reddit_posts(subreddit=subreddit, limit=limit)
 
         return jsonify(posts_data), 200
     
@@ -176,10 +176,10 @@ def fetch_reddit_post():
 @app.route('/api/bsky_posts', methods=['POST'])
 def fetch_bsky_posts():
     data = request.json
-    query = data.get('query', '')
+    topic = data.get('topic', '')
     limit = data.get('limit', 10)
     try:
-        posts = handler.fetch_bsky_posts(query=query, limit=limit)
+        posts = handler.fetch_bsky_posts(topic=topic, limit=limit)
         return jsonify([{"text": post.record.text, "author": post.author.did} for post in posts])
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -188,19 +188,19 @@ def fetch_bsky_posts():
 def youtube_comments():
     try:
         data = request.json
-        query = data.get('topic') or data.get('query')
+        topic = data.get('topic') 
         start_date_str = data.get('start_date')
         end_date_str = data.get('end_date')
-        number_of_data = data.get('number_of_data', 100)  #to be modified for user input
+        limit = data.get('limit', 100)  #to be modified for user input
         
-        if not all([query, start_date_str, end_date_str]):
+        if not all([topic, start_date_str, end_date_str]):
             return jsonify({"error": "Missing required parameters"}), 400
 
         # Convert dates to datetime objects
         start_date = datetime.fromisoformat(start_date_str)
         end_date = datetime.fromisoformat(end_date_str)
         
-        comments_df = getCommentDataMaster(query, start_date, end_date, number_of_data)
+        comments_df = getCommentDataMaster(topic, start_date, end_date, limit)
 
         # Convert DataFrame to JSON
         comments_json = comments_df.to_dict(orient='records')
