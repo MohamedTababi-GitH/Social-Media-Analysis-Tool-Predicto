@@ -47,3 +47,47 @@ try:
 except Exception as e:
     print(f"Error in fetch_reddit_post: {e}")
 """
+
+
+##### test fetch bluesky api(all good)
+"""
+url = "http://127.0.0.1:5000/api/bsky_posts"
+headers = {"Content-Type": "application/json"}
+data = {
+    "query": "test", 
+    "limit": 5       
+}
+
+try:
+    response = requests.post(url, headers=headers, json=data)
+    print("BlueSky Test - Status Code:", response.status_code)
+    if response.status_code == 200:
+        print("Response:", response.json())
+    else:
+        print("Error:", response.json())
+except Exception as e:
+    print("error")
+"""
+
+##### test fetch youtube api(all good)
+"""
+url = "http://127.0.0.1:5000/api/youtube_comments"
+headers = {"Content-Type": "application/json"}
+data = {
+    "query": "Example Topic",  # The topic you're fetching YouTube comments for
+    "start_date": "2023-01-01T00:00:00",  # Start date in ISO format
+    "end_date": "2023-12-31T23:59:59",    # End date in ISO format
+    "number_of_data": 5  # Optional, default is 100 if not specified     
+}
+
+try:
+    response = requests.post(url, headers=headers, json=data)
+    print("BlueSky Test - Status Code:", response.status_code)
+    if response.status_code == 200:
+        print("Response:", response.json())
+    else:
+        print("Error:", response.json())
+except Exception as e:
+    print("error")
+"""
+

@@ -188,19 +188,19 @@ def fetch_bsky_posts():
 def youtube_comments():
     try:
         data = request.json
-        topic = data.get('topic')
+        query = data.get('topic') or data.get('query')
         start_date_str = data.get('start_date')
         end_date_str = data.get('end_date')
         number_of_data = data.get('number_of_data', 100)  #to be modified for user input
         
-        if not all([topic, start_date_str, end_date_str]):
+        if not all([query, start_date_str, end_date_str]):
             return jsonify({"error": "Missing required parameters"}), 400
 
         # Convert dates to datetime objects
         start_date = datetime.fromisoformat(start_date_str)
         end_date = datetime.fromisoformat(end_date_str)
         
-        comments_df = getCommentDataMaster(topic, start_date, end_date, number_of_data)
+        comments_df = getCommentDataMaster(query, start_date, end_date, number_of_data)
 
         # Convert DataFrame to JSON
         comments_json = comments_df.to_dict(orient='records')
