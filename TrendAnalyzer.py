@@ -113,5 +113,5 @@ get_top_topics
 
 
 
-newdf = pd.read_csv("CSV_data/fulldata.csv")
-print(newdf.columns)
+#newdf = pd.read_csv("CSV_data/fulldata.csv")
+#print(newdf.columns)

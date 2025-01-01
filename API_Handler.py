@@ -62,10 +62,10 @@ class API_Handler:
 handler = API_Handler()
 
 # Example usage for Reddit posts and their comments
-reddit_df = handler.fetch_reddit_posts(subreddit="webscraping", num_posts=10)
-print(reddit_df)
+#reddit_df = handler.fetch_reddit_posts(subreddit="webscraping", num_posts=10)
+#print(reddit_df)
 
 # Example usage for BlueSky posts
-bsky_data = handler.fetch_bsky_posts(query='Health', limit=1)
-for post in bsky_data:
-    print("BlueSky Post:", post.record.text)
+#bsky_data = handler.fetch_bsky_posts(query='Health', limit=1)
+#for post in bsky_data:
+#    print("BlueSky Post:", post.record.text)
