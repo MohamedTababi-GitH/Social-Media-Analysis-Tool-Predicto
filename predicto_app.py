@@ -227,7 +227,7 @@ def trend_analysis():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Route: Top Topics
+
 @app.route('/api/top_topics', methods=['POST'])
 def top_topics():
     data = request.json
@@ -237,8 +237,7 @@ def top_topics():
         start_date = data.get('start_date', None)
         end_date = data.get('end_date', None)
         top_n = data.get('top_n', 10)
-
-        # Get top topics
+        
         top_topics_df = get_top_topics(df, column, start_date, end_date, top_n)
         
         return jsonify(top_topics_df.to_dict(orient='records'))
