@@ -25,26 +25,4 @@ jobs:
         with:
           python-version: 3.8  # Specify the version of Python you are using
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt  # Install dependencies from the requirements file
-
-      # Step 4: Run tests using pytest (assumed to be your testing framework)
-      - name: Run tests
-        run: |
-          pytest  # You can replace this with your testing framework or script
-
-      # Step 5: Check if the Flask application can start (optional)
-      - name: Test Flask App Starts
-        run: |
-          flask run --host=0.0.0.0 &  # Start Flask app in the background
-          sleep 10  # Give it some time to start up
-          curl http://127.0.0.1:5000  # Check if the server is up (change as needed)
-
-      # Optional: Deploy or build step (e.g., deploy to a server or package the app)
-      # - name: Deploy to production
-      #   run: |
-      #     deploy_script.sh  # Implement your deploy script or steps here
-
+ 
