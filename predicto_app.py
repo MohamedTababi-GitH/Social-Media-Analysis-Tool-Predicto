@@ -48,6 +48,38 @@ def get_ssh_db_connection():
         )
     return g.tunnel, g.db_engine
 
+
+
+@app.route('/api/query_posts', methods=['POST'])
+def query_posts_endpoint():
+    try:
+        data = request.json
+
+        platforms = data.get('platforms', None) 
+        start_date = data.get('start_date', None) 
+        end_date = data.get('end_date', None)  
+        topic = data.get('topic', None)  
+        limit = data.get('limit', None) 
+
+        # Get the SSH DB connection and engine
+        tunnel, db_engine = get_ssh_db_connection()
+
+        results = query_posts(
+            engine=db_engine,
+            platforms=platforms,
+            start_date=start_date,
+            end_date=end_date,
+            topic=topic,
+            limit=limit
+        )
+
+        return jsonify(results.to_dict(orient='records')), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
 # Clean up after each request
 @app.teardown_appcontext
 def close_db_connection(exception):
