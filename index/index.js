@@ -42,9 +42,9 @@ async function fetchPosts(startDate, endDate, platformName) {
 }
 
 // Function to handle POST requests
-async function sendPostsData(startDate, endDate, platformName) {
+async function sendPostsData(jsonRequest) {
   try {
-    console.log(JSON.stringify({ startDate, endDate, platformName }));
+    console.log(JSON.stringify(jsonRequest));
       const response = await fetch('/api/posts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -71,26 +71,12 @@ function getDFExample(){
   // console.log("data"+startDate);
   // console.log("data"+endDate);
   // console.log("data"+drop);
-  sendPostsData(startDate,endDate,platformName);
+  sendPostsData({startDate,endDate,platformName});
 
   // console.log(JSON.stringify({ startDate, endDate, platformName }));
   // Perform GET and POST requests
   // fetchPosts(startDate, endDate, platformName);
   // sendPostsData(startDate, endDate, platformName);
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
 
 
 
@@ -125,31 +111,37 @@ function sentimenatlAnalisis(){
 
   let startDate= document.querySelectorAll(`#sentiment > .calendar > input`)[0].value;
   let endDate= document.querySelectorAll(`#sentiment > .calendar > input`)[1].value;
-  let drop1= document.querySelectorAll(`#sentiment > .data-controls > select`)[0].value;
-  let drop2= document.querySelectorAll(`#sentiment > .data-controls > select`)[1].value;
+  let topic= document.querySelectorAll(`#sentiment > .data-controls > select`)[0].value;
+  let platformName= document.querySelectorAll(`#sentiment > .data-controls > select`)[1].value;
   // console.log("sent"+startDate);
   // console.log("sent"+endDate);
   // console.log("sent"+drop1);
   // console.log("sent"+drop2);
+
+  sendPostsData({startDate,endDate,topic,platformName});
+
 }
 function topicModeling(){
 
   let startDate= document.querySelectorAll(`#topics > .calendar > input`)[0].value;
   let endDate= document.querySelectorAll(`#topics > .calendar > input`)[1].value;
-
+  let topic= document.querySelectorAll(`#topics > .data-controls > select`)[0].value;
+  let platformName= document.querySelectorAll(`#topics > .data-controls > select`)[1].value;
   // console.log("topic"+startDate);
   // console.log("topic"+endDate);
 
+  sendPostsData({startDate,endDate,topic,platformName});
 }
 
 function trends(){
 
   let startDate= document.querySelectorAll(`#trends > .calendar > input`)[0].value;
   let endDate= document.querySelectorAll(`#trends > .calendar > input`)[1].value;
-  let drop1= document.querySelectorAll(`#trends > select`)[0].value;
+  let platformName= document.querySelectorAll(`#trends > select`)[0].value;
   // console.log("trends"+startDate);
   // console.log("trends"+endDate);
   // console.log("trends"+drop1);
+  sendPostsData({startDate,endDate,platformName});
 
 }
 
