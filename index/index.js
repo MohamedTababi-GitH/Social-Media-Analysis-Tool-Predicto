@@ -238,27 +238,7 @@ function getDFExampleS() {
   sendPostsDataS({ startDate, endDate });
 }
 
-//send request to back end
-async function sendPostsDataS({ startDate, endDate }) {
-  try {
-      const response = await fetch(`${backendBaseUrl}/api/query_posts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ start_date: startDate, end_date: endDate }), // Match backend parameters
-          
-      });
-      console.log("Payload being sent:", JSON.stringify({ start_date: startDate, end_date: endDate }));
 
-      if (!response.ok) throw new Error(`Failed to send: ${response.status}`);
-
-      const data = await response.json();
-      console.log("POST Response Data:", data);
-
-      sentimenatlAnalisis(data); //here to be populated with the sentiment analysis function WE DO NOT HAVE IT YET
-  } catch (error) {
-      console.error("Error during POST:", error);
-  }
-}
 
 function sentimenatlAnalisis(){
 
@@ -298,6 +278,22 @@ function topicModeling(){
   sendPostsData({startDate,endDate,topic,platformName});
 }
 
+////////// TOP TOPICS SECTION //////////////
+
+
+function validateDates(startDate, endDate) {
+  if (!startDate || !endDate) {
+      alert("Please select both start and end dates.");
+      return false;
+  }
+  if (new Date(startDate) > new Date(endDate)) {
+      alert("Start date must be before or equal to the end date.");
+      return false;
+  }
+  return true;
+}
+
+
 //get timeframe for **top topics section**
 function getDFExampleT() {
   const startDate = document.getElementById('start-date-trends').value;
@@ -305,23 +301,375 @@ function getDFExampleT() {
 
   if (!validateDates(startDate, endDate)) return; 
 
-  sendPostsData({ startDate, endDate }); 
-}
-function trends(){
-
-  let startDate= document.querySelectorAll(`#trends > .calendar > input`)[0].value;
-  let endDate= document.querySelectorAll(`#trends > .calendar > input`)[1].value;
-  let platformName= document.querySelectorAll(`#trends > select`)[0].value;
-  // console.log("trends"+startDate);
-  // console.log("trends"+endDate);
-  // console.log("trends"+drop1);
-  sendPostsData({startDate,endDate,platformName});
-
+  sendPostsDataT({ startDate, endDate }); 
 }
 
+async function sendPostsDataT({ startDate, endDate }) {
+  try {
+      const response = await fetch(`${backendBaseUrl}/api/query_posts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ start_date: startDate, end_date: endDate }), 
+          
+      });
+      console.log("Payload being sent:", JSON.stringify({ start_date: startDate, end_date: endDate }));
+
+      if (!response.ok) throw new Error(`Failed to send: ${response.status}`);
+
+      const data = await response.json();
+      console.log("POST Response Data:", data);
+
+      return data; // Render the table with received data
+  } catch (error) {
+      console.error("Error during POST:", error);
+  }
+}
+
+// Main function to handle the complete process
+async function getTrendAnalysis() {
+
+  const startDate = document.getElementById('start-date-trends').value;
+  const endDate = document.getElementById('end-date-trends').value;
+  const topic = document.getElementById('topicM').value;
+
+  if (!validateDates(startDate, endDate)) {
+      alert("Please select a valid timeframe.");
+      return;
+  }
+  if (!topic) {
+      alert("Please select a topic.");
+      return;
+  }
+
+  try {
+      const posts = await sendPostsDataT({ startDate, endDate });
+      
+      await analyzeTrends({ data: posts, topics: [topic], startDate, endDate });
+  } catch (error) {
+      console.error("Error during fetch or analysis:", error);
+  }
+}
 
 
-    // console.timeEnd()
+// Function to perform trend analysis using the fetched posts and selected topic
+async function analyzeTrends({ data, topics, startDate, endDate }) {
+  try {
+      const response = await fetch(`${backendBaseUrl}/api/trend_analysis`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              data: data,
+              topics: topics,
+              start_date: startDate,
+              end_date: endDate,
+          }),
+      });
+
+      if (!response.ok) throw new Error(`Failed trend analysis: ${response.status}`);
+
+      const result = await response.json();
+      console.log("Trend Analysis Result:", result);
+
+      // Update the chart with the analysis result
+      populateTrendChart(result);
+  } catch (error) {
+      console.error("Error performing trend analysis:", error);
+      throw error;
+  }
+}
+
+// Global variable to store the chart instance
+let trendsChartInstance;
+
+
+function populateTrendChart(data) {
+  const monthlyCounts = data.monthly_counts || [];
+
+  if (monthlyCounts.length === 0) {
+      alert("No trend data available for the selected timeframe.");
+      return;
+  }
+
+  // Extract months and totals for each topic
+  const labels = monthlyCounts.map(entry => entry.Month); // Assuming `Month` field
+  const topics = Object.keys(monthlyCounts[0]).filter(key => key !== 'Month'); // Dynamically extract topic columns
+
+  // Prepare datasets for each topic
+  const datasets = topics.map((topic, index) => ({
+      label: topic,
+      data: monthlyCounts.map(entry => entry[topic] || 0), // Fill 0 for missing data
+      borderWidth: 1,
+      barPercentage: 0.8,
+      categoryPercentage: 0.5,
+      backgroundColor: [
+          'rgb(68, 99, 255)',  // Color for Topic A
+      ][index % 3],
+  }));
+
+  // Destroy existing chart instance if it exists
+  const trendsChartElement = document.getElementById('trendsChart');
+  if (trendsChartInstance) {
+      trendsChartInstance.destroy();
+  }
+
+  trendsChartInstance = new Chart(trendsChartElement, {
+      type: 'bar', 
+      data: {
+          labels: labels,
+          datasets: datasets,
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'x', 
+          plugins: {
+              legend: {
+                  align: 'center',
+                  position: 'bottom',
+                  display: true,
+                  labels: {
+                      font: { size: 14 },
+                      borderRadius: 10,
+                      usePointStyle: true,
+                      pointStyle: 'circle',
+                  },
+              },
+              title: {
+                  text: 'Topic Frequency Across Platforms',
+                  display: true,
+                  align: 'middle',
+                  font: { size: 20 },
+                  padding: { top: 0, bottom: 5 },
+              },
+              subtitle: {
+                  display: true,
+                  text: 'Source: Predicto Platform',
+                  align: 'center',
+                  font: { size: 14 },
+                  padding: { top: 0, bottom: 10 },
+              },
+          },
+          scales: {
+              x: {
+                  title: {
+                      display: true,
+                      text: 'Month',
+                      font: { size: 14 },
+                  },
+              },
+              y: {
+                  title: {
+                      display: true,
+                      text: 'Mentions',
+                      font: { size: 14 },
+                  },
+                  beginAtZero: true,
+              },
+          },
+      },
+  });
+}
+
+
+async function getTopTopics() {
+
+  const startDate = document.getElementById('start-date-trends').value;
+  const endDate = document.getElementById('end-date-trends').value;
+
+  if (!validateDates(startDate, endDate)) {
+      alert("Please select a valid timeframe.");
+      return;
+  }
+
+  try {
+      const posts = await sendPostsDataT({ startDate, endDate });
+
+      const response = await fetch(`${backendBaseUrl}/api/top_topics`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              data: posts,
+              column: 'PostContent', 
+              start_date: startDate,
+              end_date: endDate,
+              top_n: 10, //we can add more topics...
+          }),
+      });
+
+      if (!response.ok) throw new Error(`Failed to fetch top topics: ${response.status}`);
+
+      const topTopics = await response.json();
+      console.log("Top Topics Data:", topTopics);
+
+      updateChartWithTopTopics(topTopics);
+  } catch (error) {
+      console.error("Error fetching top topics:", error);
+  }
+}
+
+function updateChartWithTopTopics(topTopics) {
+
+  if (!topTopics || topTopics.length === 0) {
+      alert("No data available for the top 10 topics.");
+      return;
+  }
+  const labels = topTopics.map(topic => topic.Topic);
+  const values = topTopics.map(topic => topic.Frequency);
+
+  const backgroundColors = [
+      'rgb(68, 99, 255)',  // Blue
+      'rgb(79, 194, 79)',  // Green
+      'rgb(255, 187, 99)', // Yellow-Orange
+      'rgb(255, 99, 100)', // Red
+      'rgb(255, 232, 103)', // Light Yellow
+      'rgb(87, 87, 87)',   // Gray
+      'rgb(128, 0, 255)',  // Purple
+      'rgb(255, 99, 132)', // Pink
+      'rgb(0, 191, 255)',  // Sky Blue
+      'rgb(255, 165, 0)',  // Orange
+  ];
+
+
+  const dataset = {
+      label: 'Frequency',
+      data: values,
+      borderWidth: 1,
+      barPercentage: 0.8,
+      categoryPercentage: 0.5,
+      backgroundColor: labels.map((_, index) => backgroundColors[index % backgroundColors.length]),
+  };
+
+  // Destroy existing chart instance to avoid conflicts
+  const trendsChartElement = document.getElementById('trendsChart');
+  if (trendsChartInstance) {
+      trendsChartInstance.destroy();
+  }
+
+  // Create a new chart instance
+  trendsChartInstance = new Chart(trendsChartElement, {
+      type: 'bar', 
+      data: {
+          labels: labels,
+          datasets: [dataset],
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'x', 
+          plugins: {
+              legend: {
+                  align: 'center',
+                  position: 'bottom',
+                  display: true,
+                  labels: {
+                      font: { size: 14 },
+                      borderRadius: 10,
+                      usePointStyle: true,
+                      pointStyle: 'circle',
+                  },
+              },
+              title: {
+                  text: 'Top 10 Topics',
+                  display: true,
+                  align: 'middle',
+                  font: { size: 20 },
+                  padding: { top: 0, bottom: 5 },
+              },
+              subtitle: {
+                  display: true,
+                  text: 'Source: Predicto Platform',
+                  align: 'center',
+                  font: { size: 14 },
+                  padding: { top: 0, bottom: 10 },
+              },
+          },
+          scales: {
+              x: {
+                  title: {
+                      display: true,
+                      text: 'Topics',
+                      font: { size: 14 },
+                  },
+              },
+              y: {
+                  title: {
+                      display: true,
+                      text: 'Frequency',
+                      font: { size: 14 },
+                  },
+                  beginAtZero: true,
+              },
+          },
+      },
+  });
+}
+
+// just a placeholder chart until it gets updated
+function initializeChart() {
+  const trendsChartElement = document.getElementById('trendsChart');
+
+  const placeholderLabels = ['Loading...'];
+  const placeholderValues = [0];
+
+  const dataset = {
+      label: 'Frequency',
+      data: placeholderValues,
+      borderWidth: 1,
+      barPercentage: 0.8,
+      categoryPercentage: 0.5,
+      backgroundColor: ['rgba(200, 200, 200, 0.5)'], 
+  };
+
+  trendsChartInstance = new Chart(trendsChartElement, {
+      type: 'bar',
+      data: {
+          labels: placeholderLabels,
+          datasets: [dataset],
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+              legend: { display: false },
+              title: {
+                  display: true,
+                  text: 'Top 10 Topics',
+              },
+          },
+          scales: {
+              x: {
+                  title: {
+                      display: true,
+                      text: 'Topics',
+                  },
+              },
+              y: {
+                  title: {
+                      display: true,
+                      text: 'Frequency',
+                  },
+                  beginAtZero: true,
+              },
+          },
+      },
+  });
+}
+
+initializeChart();
+
+
+
+function validateDates(startDate, endDate) {
+  if (!startDate || !endDate) {
+      alert("Please select both start and end dates.");
+      return false;
+  }
+  if (new Date(startDate) > new Date(endDate)) {
+      alert("Start date must be before or equal to the end date.");
+      return false;
+  }
+  return true;
+}
 
 
 
@@ -529,8 +877,8 @@ new Chart(topicsChart, {
 });
 
 
-
-const trendsChart = document.getElementById('trendsChart');
+/*
+//const trendsChart = document.getElementById('trendsChart');
 
 let platforms= ['YouTube', 'Reddit', 'BlueSky'];
 let mentions=[
@@ -634,6 +982,7 @@ new Chart(trendsChart, {
   } 
   }
 });
+*/
 
 /*
 

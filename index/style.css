@@ -87,12 +87,14 @@ header {
 }
 
 .hero-content img{
-    margin-right: 1%;
+    margin: 2%;
+
 
 }
 
 .logo_sources_small{
     width:3%;
+
 }
 
 /* sections */
