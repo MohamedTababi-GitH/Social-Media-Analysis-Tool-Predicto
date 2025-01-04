@@ -1,4 +1,5 @@
 from flask import Flask, request,g, jsonify
+from flask_cors import CORS
 from TrendAnalyzer import analyze_frequency_modin, get_top_topics
 from DataLoader import get_ssh_db_connection, query_posts
 from sqlalchemy import create_engine, text
@@ -12,8 +13,10 @@ import re
 
 
 
-app = Flask(__name__)
 
+
+app = Flask(__name__)
+CORS(app)
 
 def extract_subreddit_from_url(url):
     match = re.search(r"reddit\.com/r/([a-zA-Z0-9_]+)", url)
@@ -85,16 +88,15 @@ def close_db_connection(exception):
 @app.route('/api/query_posts', methods=['POST'])
 def query_posts_endpoint():
     try:
-        #not really working but ssh starts now with the first request (def setup())
+        # Establish SSH and DB connection
         tunnel, db_engine = get_ssh_db_connection()
+        print("SSH Tunnel and DB connection established successfully.")
+
 
         # Parse request data
         data = request.json
-        platforms = data.get('platforms', None)
-        start_date = data.get('start_date', None)
-        end_date = data.get('end_date', None)
-        topic = data.get('topic', None)
-        limit = data.get('limit', None)
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
 
         # Construct the query
         query = """
@@ -116,33 +118,26 @@ def query_posts_endpoint():
         """
         params = {}
 
-        if platforms:
-            placeholders = ", ".join([f":platform_{i}" for i in range(len(platforms))])
-            query += f" AND p.PlatformName IN ({placeholders})"
-            for i, platform in enumerate(platforms):
-                params[f"platform_{i}"] = platform
         if start_date:
             query += " AND hp.Timestamp >= :start_date"
             params['start_date'] = start_date
         if end_date:
             query += " AND hp.Timestamp <= :end_date"
             params['end_date'] = end_date
-        if topic:
-            query += " AND spd.SearchedTopic = :topic"
-            params['topic'] = topic
-        if limit:
-            query += " LIMIT :limit"
-            params['limit'] = limit
 
         # Execute the query
         with db_engine.connect() as connection:
             result = connection.execute(text(query), params)
+            rows = result.fetchall()  # Fetch all rows as a list of tuples
+            column_names = result.keys()  # Get column names from the query
 
-            for row in result:
-                print(row)
+        # Convert rows to dictionaries explicitly
+            posts = [dict(zip(column_names, row)) for row in rows]
 
-            posts = [dict(row) for row in result]  # This may need to be adjusted based on the above print output
+        # Debugging: Print the result to verify
+            print("Posts being returned:", posts)
 
+        # Return posts as JSON
         return jsonify(posts), 200
 
     except Exception as e:
@@ -165,6 +160,7 @@ def fetch_reddit_post():
         subreddit = extract_subreddit_from_url(url)
 
         posts_data = handler.fetch_reddit_posts(subreddit=subreddit, limit=limit)
+        
 
         return jsonify(posts_data), 200
     

@@ -26,6 +26,8 @@
     {"0":"https:\/\/www.youtube.com\/watch?v=dDLRaiocb_k","1":"https:\/\/www.youtube.com\/watch?v=dDLRaiocb_k","2":"https:\/\/www.youtube.com\/watch?v=dDLRaiocb_k"}}
 */
 
+const backendBaseUrl = 'http://127.0.0.1:5000';
+
 
 // Function to handle GET requests
 async function fetchPosts(startDate, endDate, platformName) {
@@ -41,71 +43,222 @@ async function fetchPosts(startDate, endDate, platformName) {
   }
 }
 
-// Function to handle POST requests
-async function sendPostsData(jsonRequest) {
+
+///////// DATABASE SECTION ///////
+
+//send request to back end
+async function sendPostsData({ startDate, endDate }) {
   try {
-    console.log(JSON.stringify(jsonRequest));
-      const response = await fetch('/api/posts', {
+      const response = await fetch(`${backendBaseUrl}/api/query_posts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ startDate, endDate, platformName }),
+          body: JSON.stringify({ start_date: startDate, end_date: endDate }), // Match backend parameters
+          
       });
+      console.log("Payload being sent:", JSON.stringify({ start_date: startDate, end_date: endDate }));
+
       if (!response.ok) throw new Error(`Failed to send: ${response.status}`);
+
       const data = await response.json();
       console.log("POST Response Data:", data);
+
+      populateTable(data); // Render the table with received data
   } catch (error) {
       console.error("Error during POST:", error);
   }
 }
 
+// get timeframe for **database section**
+function getDFExample() {
+  const startDate = document.getElementById('start-date').value;
+  const endDate = document.getElementById('end-date').value;
+  console.log("Start Date:", startDate);
+  console.log("End Date:", endDate);
+
+  if (!validateDates(startDate, endDate)) return;
+
+  sendPostsData({ startDate, endDate }); 
+}
 
 
-function getDFExample(){
+//only for **database section**
+function populateTable(data) {
+  const table = document.getElementById('dffetchExample');
+  table.innerHTML = ''; 
 
-  // console.log("testing");
-  
-  
-  let startDate= document.querySelectorAll(`#data > .calendar > input`)[0].value;
-  let endDate= document.querySelectorAll(`#data > .calendar > input`)[1].value;
-  let platformName= document.querySelectorAll(`#data > .data-controls > select`)[0].value;
-  // console.log("data"+startDate);
-  // console.log("data"+endDate);
-  // console.log("data"+drop);
-  sendPostsData({startDate,endDate,platformName});
-
-  // console.log(JSON.stringify({ startDate, endDate, platformName }));
-  // Perform GET and POST requests
-  // fetchPosts(startDate, endDate, platformName);
-  // sendPostsData(startDate, endDate, platformName);
-
-
-
-  // resizeTo(startDate,endDate,drop)
-  
-  // sentimenatlAnalisis();
-  // topicModeling();
-  // trends();
-  
-  var jselements=
-  [{"PostID":"nxCG4h_7h98ALtV9CjwtzgJSse8","Timestamp":"2024-12-28T20:47:55Z","PlatformName":"youtube","Username":"@meganchristinadunn","PostContent":"Made this tonight and it was delicious! Thanks for the inspiration!","NumberOfComments":0,"NumberOfLikes":0,"videoid":"dDLRaiocb_k","SearchedTopic":"Food","NumberOfReposts":null,"URL":"https:\/\/www.youtube.com\/watch?v=dDLRaiocb_k"},{"PostID":"G9aIFIL26RjmVjL1jAcUzeDnNBQ","Timestamp":"2024-12-28T19:28:41Z","PlatformName":"youtube","Username":"@curlyninjaw.9489","PostContent":"I don\u2018t think eating chicken is healthy\u2026 more veggies please","NumberOfComments":0,"NumberOfLikes":0,"videoid":"dDLRaiocb_k","SearchedTopic":"Food","NumberOfReposts":null,"URL":"https:\/\/www.youtube.com\/watch?v=dDLRaiocb_k"},{"PostID":"PpjRUI4O6UzHj0Fh0xk3thSBHg8","Timestamp":"2024-12-28T19:23:07Z","PlatformName":"youtube","Username":"@lazardan8389","PostContent":"The meal is fried in oil, not healthy","NumberOfComments":0,"NumberOfLikes":0,"videoid":"dDLRaiocb_k","SearchedTopic":"Food","NumberOfReposts":null,"URL":"https:\/\/www.youtube.com\/watch?v=dDLRaiocb_k"}];
-  
-      
-  
-      let keys=Object.keys(jselements[0]);
-      // console.log(keys);
-  
-  
-      // console.time()
-      document.getElementById('dffetchExample').innerHTML = `
-      <thead>
-          ${keys.map(x => `<th>${x}</th>`).join('')}
-      </thead>
-      <tBody>
-          ${jselements.map(x => `<tr>${keys.map(y=> `<td>${x[y]}</td>`).join(``)}</tr>`).join(``)}
-      </tBody>
-      `
+  if (data.length === 0) {
+    table.innerHTML = '<tr><td colspan="10">No results found for the selected timeframe.</td></tr>';
+    return;
   }
 
+  // Create table headers
+  const headers = Object.keys(data[0]);
+  const headerRow = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+  table.innerHTML += headerRow;
+
+  const maxRows = 5;
+  const rowsToDisplay = data.slice(0, maxRows);
+
+  rowsToDisplay.forEach(row => {
+    const rowHTML = `<tr>${headers.map(h => `<td>${row[h]}</td>`).join('')}</tr>`;
+    table.innerHTML += rowHTML;
+  });
+
+  if (data.length > maxRows) {
+    const footerRow = `<tr><td colspan="${headers.length}">Showing 10 of ${data.length} results.</td></tr>`;
+    table.innerHTML += footerRow;
+  }
+}
+
+//fetch topic in real time **database section**
+// SELECT FIRST START-DATE, END-DATE, TOPIC AND THEN PLATFORM
+async function handlePlatformChange() {
+  const platform = document.getElementById('platform-select').value;
+  const topic = document.getElementById('topic-select').value;
+  const startDate = document.getElementById('start-date').value;
+  const endDate = document.getElementById('end-date').value;
+
+  if (!startDate || !endDate) {
+    alert("Please select both start and end dates.");
+    return;
+  }
+  
+  if (!topic) {
+    alert("Please select a topic.");
+    return;
+  }
+  
+  if (!platform) {
+      alert("Please select a platform.");
+      return;
+  }
+
+  let endpoint = '';
+  let payload = {};
+
+  switch (platform) {
+      case 'YouTube':
+          endpoint = '/api/youtube_comments';
+          payload = {
+              topic: topic,
+              start_date: startDate,
+              end_date: endDate,
+              //limit: 100,
+          };
+          break;
+      case 'Reddit':
+          endpoint = '/api/reddit_posts';
+          const redditUrl = `https://www.reddit.com/r/${topic}/comments/abcdef/example_post/`; 
+      
+          // Prepare the payload for the backend
+          payload = {
+              url: redditUrl, 
+              limit: 10,    
+          };
+      
+          try {
+              const response = await fetch(`${backendBaseUrl}${endpoint}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload),
+              });
+      
+              if (!response.ok) {
+                  throw new Error(`Failed to fetch Reddit data: ${response.status}`);
+              }
+      
+              const data = await response.json();
+              console.log("Reddit Data:", data);
+      
+              populateTable(data);
+          } catch (error) {
+              console.error("Error fetching Reddit data:", error);
+          }
+          break;
+      case 'Bluesky':
+          endpoint = '/api/bsky_posts';
+          payload = {
+              topic: topic,
+              //start_date: startDate,
+              //end_date: endDate,
+              limit: 10,
+          };
+          break;
+      default:
+          alert('Invalid platform selection.');
+          return;
+  }
+
+  try {
+      const response = await fetch(`http://127.0.0.1:5000${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(`${platform} Data:`, data);
+
+      // Display the fetched data
+      populateTable(data);
+  } catch (error) {
+      console.error(`Error fetching ${platform} data:`, error);
+  }
+}
+
+
+function validateDates(startDate, endDate) {
+  if (!startDate || !endDate) {
+      alert("Please select both start and end dates.");
+      return false;
+  }
+  if (new Date(startDate) > new Date(endDate)) {
+      alert("Start date must be before or equal to the end date.");
+      return false;
+  }
+  return true;
+}
+
+
+
+
+///////// SENTIMENT SECTION ///////////
+
+// get timeframe for **sentiment section**
+function getDFExampleS() {
+  const startDate = document.getElementById('start-date-sentiment').value;
+  const endDate = document.getElementById('end-date-sentiment').value;
+
+  if (!validateDates(startDate, endDate)) return; 
+
+  sendPostsDataS({ startDate, endDate });
+}
+
+//send request to back end
+async function sendPostsDataS({ startDate, endDate }) {
+  try {
+      const response = await fetch(`${backendBaseUrl}/api/query_posts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ start_date: startDate, end_date: endDate }), // Match backend parameters
+          
+      });
+      console.log("Payload being sent:", JSON.stringify({ start_date: startDate, end_date: endDate }));
+
+      if (!response.ok) throw new Error(`Failed to send: ${response.status}`);
+
+      const data = await response.json();
+      console.log("POST Response Data:", data);
+
+      sentimenatlAnalisis(data); //here to be populated with the sentiment analysis function WE DO NOT HAVE IT YET
+  } catch (error) {
+      console.error("Error during POST:", error);
+  }
+}
 
 function sentimenatlAnalisis(){
 
@@ -121,6 +274,18 @@ function sentimenatlAnalisis(){
   sendPostsData({startDate,endDate,topic,platformName});
 
 }
+
+//get timeframe for **topic modelling section**
+function getDFExampleM() {
+  const startDate = document.getElementById('start-date-model').value;
+  const endDate = document.getElementById('end-date-model').value;
+
+  if (!validateDates(startDate, endDate)) return; 
+
+  sendPostsData({ startDate, endDate }); 
+}
+
+
 function topicModeling(){
 
   let startDate= document.querySelectorAll(`#topics > .calendar > input`)[0].value;
@@ -133,6 +298,15 @@ function topicModeling(){
   sendPostsData({startDate,endDate,topic,platformName});
 }
 
+//get timeframe for **top topics section**
+function getDFExampleT() {
+  const startDate = document.getElementById('start-date-trends').value;
+  const endDate = document.getElementById('end-date-trends').value;
+
+  if (!validateDates(startDate, endDate)) return; 
+
+  sendPostsData({ startDate, endDate }); 
+}
 function trends(){
 
   let startDate= document.querySelectorAll(`#trends > .calendar > input`)[0].value;

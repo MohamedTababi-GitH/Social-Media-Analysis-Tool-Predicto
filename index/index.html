@@ -58,19 +58,18 @@
         <!-- button -->
         <div class="data-controls">
             <button onclick="getDFExample()" class="btn-fetch">Fetch Database Data</button>
-
-            <!-- dropdown menu -->
-            <!-- <div class="dropdown">
-                <button class="btn-dropdown">Fetch Data in Real-Time ▼</button>
-                <div class="dropdown-menu">
-                    <a href="#">YouTube</a>
-                    <a href="#">Reddit</a>
-                    <a href="#">Bluesky</a>
-                </div>
-            </div> -->
-
-            <select name="dropdown" class="dropdown btn-dropdown">
+            
+            <select name="dropdown" class="dropdown btn-dropdown" id="topic-select">
                 <option value="" disabled selected hidden>Fetch Data in Real-Time ▼</option>
+                <option value="Politics">Politics</option>
+                <option value="Food">Food</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Technology">Technology</option>
+                <option value="Environment">Environment</option>
+            </select>
+
+            <select name="dropdown" class="dropdown btn-dropdown" id="platform-select" onchange="handlePlatformChange()">
+                <option value="" disabled selected hidden>Choose platform ▼</option>
                 <option value="YouTube">YouTube</option>
                 <option value="Reddit">Reddit</option>
                 <option value="Bluesky">Bluesky</option>
@@ -95,14 +94,15 @@
         <h2>Sentiment Analysis</h2>
         <p>Understand audience sentiment and tailor your strategies accordingly.</p>
         <div class="calendar">
-            <label for="start-date">Start Date:</label>
-            <input type="date" id="start-date" name="start-date">
+            <label for="start-date-sentiment">Start Date:</label>
+            <input type="date" id="start-date-sentiment" name="start-date">
 
-            <label for="end-date">End Date:</label>
-            <input type="date" id="end-date" name="end-date">
+            <label for="end-date-sentiment">End Date:</label>
+            <input type="date" id="end-date-sentiment" name="end-date">
         </div>
 
         <div class="data-controls">
+            <button onclick="getDFExampleS()" class="btn-fetch">Fetch Database Data</button>
             <!-- <div class="dropdown">
                 <button class="btn-dropdown">Choose Topic ▼</button>
                 <div class="dropdown-menu">
@@ -113,7 +113,7 @@
                     <a href="#">Environment</a>
                 </div>
             </div> -->
-            <button onclick="sentimenatlAnalisis()" class="btn-fetch">Fetch Database Data</button>
+            <!--<button onclick="sentimenatlAnalisis()" class="btn-fetch">Fetch Database Data</button> -->
             <select name="dropdown" class="dropdown btn-dropdown">
                 <option value="" disabled selected hidden>Fetch Data in Real-Time ▼</option>
                 <option value="Politics">Politics</option>
@@ -135,7 +135,7 @@
             </div> -->
 
 
-            <select name="dropdown" id="dropdown3" class="dropdown btn-dropdown">
+            <select name="dropdown" id="dropdown-sentiment" class="dropdown btn-dropdown">
                 <option value="" disabled selected hidden>Choose Platform ▼</option>
                 <option value="YouTube">YouTube</option>
                 <option value="Reddit">Reddit</option>
@@ -226,19 +226,20 @@
         <h2>Topic Modeling</h2>
         <p> Uncover the main subjects within the data </p>
         <div class="calendar">
-            <label for="start-date">Start Date:</label>
-            <input type="date" id="start-date" name="start-date">
+            <label for="start-date-model">Start Date:</label>
+            <input type="date" id="start-date-model" name="start-date">
 
-            <label for="end-date">End Date:</label>
-            <input type="date" id="end-date" name="end-date">
+            <label for="end-date-model">End Date:</label>
+            <input type="date" id="end-date-model" name="end-date">
         </div>
 
         <!-- Highcharts Container -->
         <!-- <div id="topics-chart"></div> -->
 
         <div class="data-controls">
+            <button onclick="getDFExampleM()" class="btn-fetch">Fetch Database Data</button>
 
-            <button onclick="topicModeling()" class="btn-fetch">Fetch Database Data</button>
+            <!--<button onclick="topicModeling()" class="btn-fetch">Fetch Database Data</button> -->
             <select name="dropdown" class="dropdown btn-dropdown">
                 <option value="" disabled selected hidden>Fetch Data in Real-Time ▼</option>
                 <option value="Politics">Politics</option>
@@ -270,11 +271,11 @@
         <h2>Top Topics</h2>
         <p>Get the most discussed topics or check the frequency of a certain topic</p>
         <div class="calendar">
-            <label for="start-date">Start Date:</label>
-            <input type="date" id="start-date" name="start-date">
+            <label for="start-date-trends">Start Date:</label>
+            <input type="date" id="start-date-trends" name="start-date">
 
-            <label for="end-date">End Date:</label>
-            <input type="date" id="end-date" name="end-date">
+            <label for="end-date-trends">End Date:</label>
+            <input type="date" id="end-date-trends" name="end-date">
         </div>
 
         <!-- <div class="dropdown">
@@ -286,7 +287,9 @@
                 <a href="#">X</a>
             </div>
         </div> -->
-        <button onclick="trends()" class="btn-fetch">Fetch Database Data</button>
+    <div class="data-controls">
+        <button onclick="getDFExampleT()" class="btn-fetch">Fetch Database Data</button>
+        <!--<button onclick="trends()" class="btn-fetch">Fetch Database Data</button>-->
         <select name="dropdown" class="dropdown btn-dropdown">
             <option value="" disabled selected hidden>Choose Platform ▼</option>
             <option value="YouTube">YouTube</option>
@@ -299,7 +302,7 @@
         <button class="btn-top">Get Top Predefined Topics</button>
         <!-- Highcharts Container -->
         <!-- <div id="trends-chart"></div> -->
-
+        </div>
         
         <div id="trendsParent" class="chartSize" style="height:40vh;">
             <canvas id="trendsChart"></canvas>
