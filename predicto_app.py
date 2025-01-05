@@ -148,20 +148,15 @@ def query_posts_endpoint():
 @app.route('/api/reddit_posts', methods=['POST'])
 def fetch_reddit_post():
     data = request.json
-    url = data.get('url')
-    limit = data.get('limit', 10)  # Default to 10 if not specified
-
+    print("Received data:", data) 
+    subreddit = data.get('subreddit')
+    limit = data.get('limit', 10)  
     
-    if not url:
-        return jsonify({"error": "URL is required"}), 400
+    if not subreddit:
+        return jsonify({"error": "subreddit is required"}), 400
 
     try:
-        # Extract subreddit from the URL
-        subreddit = extract_subreddit_from_url(url)
-
         posts_data = handler.fetch_reddit_posts(subreddit=subreddit, limit=limit)
-        
-
         return jsonify(posts_data), 200
     
     except Exception as e:

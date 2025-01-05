@@ -143,16 +143,13 @@ async function handlePlatformChange() {
               topic: topic,
               start_date: startDate,
               end_date: endDate,
-              //limit: 100,
+              limit: 100,
           };
           break;
       case 'Reddit':
           endpoint = '/api/reddit_posts';
-          const redditUrl = `https://www.reddit.com/r/${topic}/comments/abcdef/example_post/`; 
-      
-          // Prepare the payload for the backend
           payload = {
-              url: redditUrl, 
+              subreddit: topic, 
               limit: 10,    
           };
       
