@@ -28,12 +28,12 @@ class API_Handler:
         data = self.bsky_client.app.bsky.feed.search_posts(params=params)
         return data.posts
 
-    def fetch_reddit_posts(self, subreddit, num_posts=10):
+    def fetch_reddit_posts(self, subreddit, limit=10):
         # Ensure num_posts doesn't exceed 1000
-        num_posts = min(num_posts, 1000)
+        limit = min(limit, 1000)
 
         # Fetch posts from the subreddit using the "hot" filter
-        posts = list(self.reddit_client.subreddit(subreddit).hot(limit=num_posts))
+        posts = list(self.reddit_client.subreddit(subreddit).hot(limit=limit))
         
         # Create a list to store the submission data
         submissions_data = []

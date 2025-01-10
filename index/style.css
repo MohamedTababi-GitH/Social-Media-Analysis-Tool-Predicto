@@ -87,12 +87,14 @@ header {
 }
 
 .hero-content img{
-    margin-right: 1%;
+    margin: 2%;
+
 
 }
 
 .logo_sources_small{
     width:3%;
+
 }
 
 /* sections */
@@ -191,6 +193,7 @@ header {
     color: white;
     border-radius: 5px;
     transition: background-color 0.3s ease;
+    appearance:none;
 }
 
 .btn-fetch:hover,.btn-top10:hover,.btn-top:hover,
@@ -266,6 +269,8 @@ header {
     height: 100%; 
 }
 
+
+
 /* Icon */
 .top-icon {
     position: absolute;
@@ -277,3 +282,29 @@ header {
     width: 30px;
     height: 30px;
 }
+
+
+/* #sentimentalParent{
+    margin: 20px auto; 
+    display: block; 
+    max-width: 70%;
+    height: 100%; 
+} */
+
+.chartSize{
+    margin: 20px auto; 
+    display: block; 
+    max-width: 70%;
+    height: 100%; 
+}
+
+#dffetchExample {
+    display: block;
+    max-width: 70rem;
+    margin: auto;
+    overflow: auto;
+    border-spacing: 2rem 2px;
+    text-align: left;
+
+}
+
