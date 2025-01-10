@@ -176,9 +176,9 @@ async function handlePlatformChange() {
           endpoint = '/api/bsky_posts';
           payload = {
               topic: topic,
-              //start_date: startDate,
-              //end_date: endDate,
-              limit: 10,
+              start_date: startDate,
+              end_date: endDate,
+              limit: 100,
           };
           break;
       default:

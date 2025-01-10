@@ -7,6 +7,7 @@ from sshtunnel import SSHTunnelForwarder
 from datetime import datetime
 from API_Handler import API_Handler
 from youtubeAPI import getCommentDataMaster  # Import the function
+from BskyAPI import normal_Bsky_Api  # new function from zou
 import pandas as pd
 from docx import Document
 import re
@@ -163,7 +164,7 @@ def fetch_reddit_post():
         return jsonify({"error": str(e)}), 500
 
     
-
+"""
 @app.route('/api/bsky_posts', methods=['POST'])
 def fetch_bsky_posts():
     data = request.json
@@ -174,6 +175,44 @@ def fetch_bsky_posts():
         return jsonify([{"text": post.record.text, "author": post.author.did} for post in posts])
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+"""    
+
+    
+# new function that accepts timeframe
+@app.route('/api/bsky_posts', methods=['POST'])
+def fetch_bsky_posts():
+    try:
+        # Parse request data from the frontend
+        data = request.json
+        query = data.get('topic', '')
+        start_date = data.get('start_date') 
+        end_date = data.get('end_date') 
+        nb_posts = data.get('nb_posts', 100)
+
+        if not (query and start_date and end_date):
+            return jsonify({"error": "missing parameters"}), 400
+
+        start_day, start_month, start_year = map(int, start_date.split('-')[::-1])
+        finish_day, finish_month, finish_year = map(int, end_date.split('-')[::-1])
+
+        df = normal_Bsky_Api(
+            query=query,
+            start_day=start_day,
+            start_month=start_month,
+            start_year=start_year,
+            finish_day=finish_day,
+            finish_month=finish_month,
+            finish_year=finish_year,
+            nb_posts=nb_posts
+        )
+
+        posts_json = df.to_dict(orient='records')
+
+        return jsonify(posts_json), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/youtube_comments', methods=['POST'])
 def youtube_comments():
