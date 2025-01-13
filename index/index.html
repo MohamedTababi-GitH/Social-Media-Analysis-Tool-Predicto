@@ -48,10 +48,10 @@
         <!-- pick your date-->
         <div class="calendar">
             <label for="start-date">Start Date:</label>
-            <input type="date" id="start-date" name="start-date">
+            <input type="date" id="start-date-Table" name="start-date">
 
             <label for="end-date">End Date:</label>
-            <input type="date" id="end-date" name="end-date">
+            <input type="date" id="end-date-Table" name="end-date">
         </div>
 
         <!-- button -->
@@ -67,7 +67,7 @@
                 <option value="Environment">Environment</option>
             </select>
 
-            <select name="dropdown" class="dropdown btn-dropdown" id="platform-select" onchange="handlePlatformChange()">
+            <select name="dropdown" class="dropdown btn-dropdown" id="platform-select" onchange="getDFExample()">
                 <option value="" disabled selected hidden>Choose platform ▼</option>
                 <option value="YouTube">YouTube</option>
                 <option value="Reddit">Reddit</option>

@@ -2,7 +2,7 @@
 from dateutil.relativedelta import relativedelta
 from googleapiclient.discovery import build
 import pandas as pd
-from spyder_kernels.utils.lazymodules import pandas
+
 from datetime import datetime
 import youtubeAPI
 
@@ -155,11 +155,11 @@ def getCommentDataMaster(topic,   start_date,   end_date,   number_of_data):
 
 
     dflist = []
-    commentlist = pandas.DataFrame()
+    commentlist = pd.DataFrame()
     #iterate through months
     for i in range(0,temp.months):
         #get month videos. if we reach the api daily limit then it will stop
-
+        print("here")
         try:
             df = youtubeAPI.getVideo(topic, vid_countMonth, start_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
                                      end_date.strftime("%Y-%m-%dT%H:%M:%SZ"), API_KEY=API_KEY[0])
@@ -174,7 +174,7 @@ def getCommentDataMaster(topic,   start_date,   end_date,   number_of_data):
 
         #this line of code is not really relavent
         dflist.append(df)
-
+        
         #get X comments from each retrieved video
         for y in range(0, dflist[i].shape[0]):
             try:
@@ -194,7 +194,7 @@ def getCommentDataMaster(topic,   start_date,   end_date,   number_of_data):
         #go over to next month and repeat
         start_date = end_date
         end_date = start_date + relativedelta(months=1)
-
+        print("here")
     #store dataframe as csv
     #commentlist.to_csv("./data/comments/" + topic +"Entries"+str(commentlist.shape[0])+ ".csv", index=False)
     return commentlist

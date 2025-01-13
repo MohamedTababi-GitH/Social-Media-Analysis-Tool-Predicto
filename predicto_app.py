@@ -150,7 +150,7 @@ def query_posts_endpoint():
 def fetch_reddit_post():
     data = request.json
     print("Received data:", data) 
-    subreddit = data.get('subreddit')
+    subreddit = data.get('topic')
     limit = data.get('limit', 10)  
     
     if not subreddit:
@@ -230,6 +230,9 @@ def youtube_comments():
         start_date = datetime.fromisoformat(start_date_str)
         end_date = datetime.fromisoformat(end_date_str)
         
+
+
+
         comments_df = getCommentDataMaster(topic, start_date, end_date, limit)
 
         # Convert DataFrame to JSON

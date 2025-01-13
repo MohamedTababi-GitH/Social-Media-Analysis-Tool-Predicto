@@ -47,42 +47,77 @@ async function fetchPosts(startDate, endDate, platformName) {
 ///////// DATABASE SECTION ///////
 
 //send request to back end
-async function sendPostsData({ startDate, endDate }) {
+async function sendPostsData(endpoint,json) {
   try {
-      const response = await fetch(`${backendBaseUrl}/api/query_posts`, {
+      const jsonElement=JSON.stringify(json);
+      const response = await fetch(`${backendBaseUrl}${endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ start_date: startDate, end_date: endDate }), // Match backend parameters
-          
+          body: jsonElement, // Match backend parameters
       });
-      console.log("Payload being sent:", JSON.stringify({ start_date: startDate, end_date: endDate }));
-
+      // console.log("Payload being sent:", jsonElement);
       if (!response.ok) throw new Error(`Failed to send: ${response.status}`);
-
       const data = await response.json();
-      console.log("POST Response Data:", data);
+      // console.log("POST Response Data:", data);
+      //populateTable(data); // Render the table with received data
+      return data;
 
-      populateTable(data); // Render the table with received data
   } catch (error) {
       console.error("Error during POST:", error);
   }
 }
 
 // get timeframe for **database section**
-function getDFExample() {
-  const startDate = document.getElementById('start-date').value;
-  const endDate = document.getElementById('end-date').value;
-  console.log("Start Date:", startDate);
-  console.log("End Date:", endDate);
+async function getDFExample() {
+  let endpoint;
+  const startDate = document.getElementById('start-date-Table').value;
+  const endDate = document.getElementById('end-date-Table').value;
+  const platformName= document.getElementById(`platform-select`).value;
+  const topic= document.getElementById(`topic-select`).value;
+  const limit=10;
+  const realtime=true;
+
+  
 
   if (!validateDates(startDate, endDate)) return;
+  if(!platformName) return;
+  if(!topic) return;
 
-  sendPostsData({ startDate, endDate }); 
+  
+  if(realtime){
+    switch(platformName){
+      case 'YouTube':
+        endpoint = '/api/youtube_comments';
+        break;
+        case 'Reddit':
+          endpoint = '/api/reddit_posts';
+          
+          break;
+          case 'Bluesky':
+            endpoint = '/api/bsky_posts';
+            
+            break;
+            default:
+              alert('Invalid platform selection.');
+              return;
+            }
+  }
+  else{
+      endpoint = '/api/query_posts';
+  }
+
+
+
+  let data= await sendPostsData(endpoint,{ start_date: startDate, end_date: endDate, platforms: platformName,topic:topic,limit:limit}); 
+
+
+  populateTable(data);
+
 }
 
 
 //only for **database section**
-function populateTable(data) {
+async function populateTable(data) {
   const table = document.getElementById('dffetchExample');
   table.innerHTML = ''; 
 
@@ -107,103 +142,6 @@ function populateTable(data) {
   if (data.length > maxRows) {
     const footerRow = `<tr><td colspan="${headers.length}">Showing 10 of ${data.length} results.</td></tr>`;
     table.innerHTML += footerRow;
-  }
-}
-
-//fetch topic in real time **database section**
-// SELECT FIRST START-DATE, END-DATE, TOPIC AND THEN PLATFORM
-async function handlePlatformChange() {
-  const platform = document.getElementById('platform-select').value;
-  const topic = document.getElementById('topic-select').value;
-  const startDate = document.getElementById('start-date').value;
-  const endDate = document.getElementById('end-date').value;
-
-  if (!startDate || !endDate) {
-    alert("Please select both start and end dates.");
-    return;
-  }
-  
-  if (!topic) {
-    alert("Please select a topic.");
-    return;
-  }
-  
-  if (!platform) {
-      alert("Please select a platform.");
-      return;
-  }
-
-  let endpoint = '';
-  let payload = {};
-
-  switch (platform) {
-      case 'YouTube':
-          endpoint = '/api/youtube_comments';
-          payload = {
-              topic: topic,
-              start_date: startDate,
-              end_date: endDate,
-              limit: 100,
-          };
-          break;
-      case 'Reddit':
-          endpoint = '/api/reddit_posts';
-          payload = {
-              subreddit: topic, 
-              limit: 10,    
-          };
-      
-          try {
-              const response = await fetch(`${backendBaseUrl}${endpoint}`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(payload),
-              });
-      
-              if (!response.ok) {
-                  throw new Error(`Failed to fetch Reddit data: ${response.status}`);
-              }
-      
-              const data = await response.json();
-              console.log("Reddit Data:", data);
-      
-              populateTable(data);
-          } catch (error) {
-              console.error("Error fetching Reddit data:", error);
-          }
-          break;
-      case 'Bluesky':
-          endpoint = '/api/bsky_posts';
-          payload = {
-              topic: topic,
-              start_date: startDate,
-              end_date: endDate,
-              limit: 100,
-          };
-          break;
-      default:
-          alert('Invalid platform selection.');
-          return;
-  }
-
-  try {
-      const response = await fetch(`http://127.0.0.1:5000${endpoint}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-          throw new Error(`Failed to fetch data: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log(`${platform} Data:`, data);
-
-      // Display the fetched data
-      populateTable(data);
-  } catch (error) {
-      console.error(`Error fetching ${platform} data:`, error);
   }
 }
 
@@ -278,49 +216,10 @@ function topicModeling(){
 ////////// TOP TOPICS SECTION //////////////
 
 
-function validateDates(startDate, endDate) {
-  if (!startDate || !endDate) {
-      alert("Please select both start and end dates.");
-      return false;
-  }
-  if (new Date(startDate) > new Date(endDate)) {
-      alert("Start date must be before or equal to the end date.");
-      return false;
-  }
-  return true;
-}
 
 
-//get timeframe for **top topics section**
-function getDFExampleT() {
-  const startDate = document.getElementById('start-date-trends').value;
-  const endDate = document.getElementById('end-date-trends').value;
-
-  if (!validateDates(startDate, endDate)) return; 
-
-  sendPostsDataT({ startDate, endDate }); 
-}
-
-async function sendPostsDataT({ startDate, endDate }) {
-  try {
-      const response = await fetch(`${backendBaseUrl}/api/query_posts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ start_date: startDate, end_date: endDate }), 
-          
-      });
-      console.log("Payload being sent:", JSON.stringify({ start_date: startDate, end_date: endDate }));
-
-      if (!response.ok) throw new Error(`Failed to send: ${response.status}`);
-
-      const data = await response.json();
-      console.log("POST Response Data:", data);
-
-      return data; // Render the table with received data
-  } catch (error) {
-      console.error("Error during POST:", error);
-  }
-}
+// Global variable to store the chart instance
+let trendsChartInstance;
 
 // Main function to handle the complete process
 async function getTrendAnalysis() {
@@ -338,134 +237,117 @@ async function getTrendAnalysis() {
       return;
   }
 
-  try {
-      const posts = await sendPostsDataT({ startDate, endDate });
-      
-      await analyzeTrends({ data: posts, topics: [topic], startDate, endDate });
-  } catch (error) {
-      console.error("Error during fetch or analysis:", error);
-  }
+  // try {
+  //     const posts = await sendPostsDataT({ startDate, endDate });
+  //     console.log({ data: posts, topics: [topic], startDate, endDate });
+  //     await analyzeTrends({ data: posts, topics: [topic], startDate, endDate });
+  // } catch (error) {
+  //     console.error("Error during fetch or analysis:", error);
+  // }
+
+
+  const posts = await sendPostsData('/api/query_posts',{ start_date: startDate, end_date: endDate});
+   const data = await sendPostsData('/api/trend_analysis',{ start_date: startDate, end_date: endDate,topics:[topic],data:posts});
+
+
+   const monthlyCounts = data.monthly_counts || [];
+
+   if (monthlyCounts.length === 0) {
+       alert("No trend data available for the selected timeframe.");
+       return;
+   }
+ 
+   // Extract months and totals for each topic
+   const labels = monthlyCounts.map(entry => entry.Month); // Assuming `Month` field
+   const topics = Object.keys(monthlyCounts[0]).filter(key => key !== 'Month'); // Dynamically extract topic columns
+ 
+  //  console.log(labels);
+  //  console.log(topics);
+ 
+   // Prepare datasets for each topic
+   const datasets = topics.map((topic, index) => ({
+       label: topic,
+       data: monthlyCounts.map(entry => entry[topic] || 0), // Fill 0 for missing data
+       borderWidth: 1,
+       barPercentage: 0.8,
+       categoryPercentage: 0.5,
+       backgroundColor: [
+           'rgb(68, 99, 255)',  // Color for Topic A
+       ][(index % 3)],
+   }));
+ 
+   // Destroy existing chart instance if it exists
+   const trendsChartElement = document.getElementById('trendsChart');
+   if (trendsChartInstance) {
+       trendsChartInstance.destroy();
+   }
+ 
+   trendsChartInstance = new Chart(trendsChartElement, {
+       type: 'bar', 
+       data: {
+           labels: labels,
+           datasets: datasets,
+       },
+       options: {
+           responsive: true,
+           maintainAspectRatio: false,
+           indexAxis: 'x', 
+           plugins: {
+               legend: {
+                   align: 'center',
+                   position: 'bottom',
+                   display: true,
+                   labels: {
+                       font: { size: 14 },
+                       borderRadius: 10,
+                       usePointStyle: true,
+                       pointStyle: 'circle',
+                   },
+               },
+               title: {
+                   text: 'Topic Frequency Across Platforms',
+                   display: true,
+                   align: 'middle',
+                   font: { size: 20 },
+                   padding: { top: 0, bottom: 5 },
+               },
+               subtitle: {
+                   display: true,
+                   text: 'Source: Predicto Platform',
+                   align: 'center',
+                   font: { size: 14 },
+                   padding: { top: 0, bottom: 10 },
+               },
+           },
+           scales: {
+               x: {
+                   title: {
+                       display: true,
+                       text: 'Month',
+                       font: { size: 14 },
+                   },
+               },
+               y: {
+                   title: {
+                       display: true,
+                       text: 'Mentions',
+                       font: { size: 14 },
+                   },
+                   beginAtZero: true,
+               },
+           },
+       },
+   });
+
+
+
+
 }
 
 
-// Function to perform trend analysis using the fetched posts and selected topic
-async function analyzeTrends({ data, topics, startDate, endDate }) {
-  try {
-      const response = await fetch(`${backendBaseUrl}/api/trend_analysis`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-              data: data,
-              topics: topics,
-              start_date: startDate,
-              end_date: endDate,
-          }),
-      });
-
-      if (!response.ok) throw new Error(`Failed trend analysis: ${response.status}`);
-
-      const result = await response.json();
-      console.log("Trend Analysis Result:", result);
-
-      // Update the chart with the analysis result
-      populateTrendChart(result);
-  } catch (error) {
-      console.error("Error performing trend analysis:", error);
-      throw error;
-  }
-}
-
-// Global variable to store the chart instance
-let trendsChartInstance;
 
 
-function populateTrendChart(data) {
-  const monthlyCounts = data.monthly_counts || [];
 
-  if (monthlyCounts.length === 0) {
-      alert("No trend data available for the selected timeframe.");
-      return;
-  }
-
-  // Extract months and totals for each topic
-  const labels = monthlyCounts.map(entry => entry.Month); // Assuming `Month` field
-  const topics = Object.keys(monthlyCounts[0]).filter(key => key !== 'Month'); // Dynamically extract topic columns
-
-  // Prepare datasets for each topic
-  const datasets = topics.map((topic, index) => ({
-      label: topic,
-      data: monthlyCounts.map(entry => entry[topic] || 0), // Fill 0 for missing data
-      borderWidth: 1,
-      barPercentage: 0.8,
-      categoryPercentage: 0.5,
-      backgroundColor: [
-          'rgb(68, 99, 255)',  // Color for Topic A
-      ][index % 3],
-  }));
-
-  // Destroy existing chart instance if it exists
-  const trendsChartElement = document.getElementById('trendsChart');
-  if (trendsChartInstance) {
-      trendsChartInstance.destroy();
-  }
-
-  trendsChartInstance = new Chart(trendsChartElement, {
-      type: 'bar', 
-      data: {
-          labels: labels,
-          datasets: datasets,
-      },
-      options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          indexAxis: 'x', 
-          plugins: {
-              legend: {
-                  align: 'center',
-                  position: 'bottom',
-                  display: true,
-                  labels: {
-                      font: { size: 14 },
-                      borderRadius: 10,
-                      usePointStyle: true,
-                      pointStyle: 'circle',
-                  },
-              },
-              title: {
-                  text: 'Topic Frequency Across Platforms',
-                  display: true,
-                  align: 'middle',
-                  font: { size: 20 },
-                  padding: { top: 0, bottom: 5 },
-              },
-              subtitle: {
-                  display: true,
-                  text: 'Source: Predicto Platform',
-                  align: 'center',
-                  font: { size: 14 },
-                  padding: { top: 0, bottom: 10 },
-              },
-          },
-          scales: {
-              x: {
-                  title: {
-                      display: true,
-                      text: 'Month',
-                      font: { size: 14 },
-                  },
-              },
-              y: {
-                  title: {
-                      display: true,
-                      text: 'Mentions',
-                      font: { size: 14 },
-                  },
-                  beginAtZero: true,
-              },
-          },
-      },
-  });
-}
 
 
 async function getTopTopics() {
@@ -653,21 +535,6 @@ function initializeChart() {
 }
 
 initializeChart();
-
-
-
-function validateDates(startDate, endDate) {
-  if (!startDate || !endDate) {
-      alert("Please select both start and end dates.");
-      return false;
-  }
-  if (new Date(startDate) > new Date(endDate)) {
-      alert("Start date must be before or equal to the end date.");
-      return false;
-  }
-  return true;
-}
-
 
 
 
