@@ -16,7 +16,6 @@ from typing import List, Dict, Tuple
 import warnings
 import nltk
 from nltk.corpus import stopwords
-import spacy
 from sklearn.feature_extraction.text import CountVectorizer
 from tqdm.auto import tqdm
 import time
@@ -131,6 +130,10 @@ class TopicModelingPipelineBertopic:
 
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Preprocess the input data."""
+        nltk.download('stopwords')
+        nltk.download('punkt')
+        nltk.download('punkt_tab')
+        
         self.logger.info("Starting data preprocessing")
         total_rows = len(df)
         
