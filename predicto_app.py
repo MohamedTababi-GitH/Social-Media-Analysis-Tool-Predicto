@@ -1,16 +1,19 @@
 from flask import Flask, request,g, jsonify
 from flask_cors import CORS
-from TrendAnalyzer import analyze_frequency_modin, get_top_topics
+from TrendAnalyzer import analyze_frequency_modin, get_top_topics,recommend_news_from_api
 from DataLoader import get_ssh_db_connection, query_posts
 from sqlalchemy import create_engine, text
+from topic_model import TopicModelingPipelineBertopic
 from sshtunnel import SSHTunnelForwarder
 from datetime import datetime
 from API_Handler import API_Handler
-from youtubeAPI import getCommentDataMaster  # Import the function
-from BskyAPI import normal_Bsky_Api  # new function from zou
+from youtubeAPI import getCommentDataMaster  
+from BskyAPI import normal_Bsky_Api 
+from AiSentimentModel import SentimentAnalyzer
 import pandas as pd
 from docx import Document
 import re
+import numpy as np
 
 
 
@@ -18,6 +21,16 @@ import re
 
 app = Flask(__name__)
 CORS(app)
+
+# PIPELINE INIT
+pipeline = TopicModelingPipelineBertopic(
+embedding_model='BAAI/bge-base-en-v1.5', 
+eps=0.8, 
+min_samples=5, 
+nr_topics=10, 
+log_level='INFO',
+openai_api_key='API_KEY'
+)
 
 def extract_subreddit_from_url(url):
     match = re.search(r"reddit\.com/r/([a-zA-Z0-9_]+)", url)
@@ -98,6 +111,9 @@ def query_posts_endpoint():
         data = request.json
         start_date = data.get('start_date')
         end_date = data.get('end_date')
+        limit = data.get('limit', 20000)
+
+
 
         # Construct the query
         query = """
@@ -126,6 +142,11 @@ def query_posts_endpoint():
             query += " AND hp.Timestamp <= :end_date"
             params['end_date'] = end_date
 
+        query += " LIMIT :limit"
+        params['limit'] = limit
+
+
+
         # Execute the query
         with db_engine.connect() as connection:
             result = connection.execute(text(query), params)
@@ -149,20 +170,26 @@ def query_posts_endpoint():
 @app.route('/api/reddit_posts', methods=['POST'])
 def fetch_reddit_post():
     data = request.json
-    print("Received data:", data) 
-    subreddit = data.get('topic')
-    limit = data.get('limit', 10)  
+    url = data.get('url')
+    limit = data.get('limit', 100)  
+
     
-    if not subreddit:
-        return jsonify({"error": "subreddit is required"}), 400
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
 
     try:
+        # Extract subreddit from the URL
+        subreddit = extract_subreddit_from_url(url)
+
         posts_data = handler.fetch_reddit_posts(subreddit=subreddit, limit=limit)
+        
+
         return jsonify(posts_data), 200
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+    
     
 """
 @app.route('/api/bsky_posts', methods=['POST'])
@@ -212,7 +239,7 @@ def fetch_bsky_posts():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
 
 @app.route('/api/youtube_comments', methods=['POST'])
 def youtube_comments():
@@ -230,9 +257,6 @@ def youtube_comments():
         start_date = datetime.fromisoformat(start_date_str)
         end_date = datetime.fromisoformat(end_date_str)
         
-
-
-
         comments_df = getCommentDataMaster(topic, start_date, end_date, limit)
 
         # Convert DataFrame to JSON
@@ -241,7 +265,103 @@ def youtube_comments():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+# SENTIMENT SECTION
+
+@app.route('/api/sentiment_analysis', methods=['POST'])
+def sentiment_analysis():
+    try:
+        # Establish SSH and DB connection
+        tunnel, db_engine = get_ssh_db_connection()
+        print("SSH Tunnel and DB connection established successfully.")
+
+
+        # Parse request data
+        data = request.json
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        platformName = data.get('platforms')
+        topic = data.get('topic')
+        # limit = data.get('limit')
+
+        # Construct the query
+        query = """
+            SELECT 
+                hp.Timestamp, 
+                spd.PostContent
+            FROM Hub_Post hp
+            JOIN Platform p ON hp.PlatformID = p.PlatformID
+            JOIN Sat_PostDetails spd ON hp.PostID = spd.PostID
+            WHERE 1=1
+        """
+
+
+
+        params = {}
+
+        if start_date:
+            query += " AND hp.Timestamp >= :start_date"
+            params['start_date'] = start_date
+        if end_date:
+            query += " AND hp.Timestamp <= :end_date"
+            params['end_date'] = end_date
+
+        if platformName:
+            query += " AND p.PlatformName = :platformName"
+            params['platformName'] = platformName
+        if topic:
+            query += " AND spd.SearchedTopic = :topic"
+            params['topic'] = topic
+        query += " ORDER BY hp.Timestamp ASC"
+        # if limit:
+        #     query += " Limit :limit"
+        #     params['limit'] = limit
+        query += " Limit 3000"
+
+        # print(text(query))
+
+        # Execute the query
+        with db_engine.connect() as connection:
+            result = connection.execute(text(query), params)
+            rows = result.fetchall()  # Fetch all rows as a list of tuples
+            column_names = result.keys()  # Get column names from the query
+
+        # Convert rows to dictionaries explicitly
+        posts = [dict(zip(column_names, row)) for row in rows]
+        posts = pd.DataFrame(posts)
+
+        print("got data")
+
+
+
+        ret=SentimentAnalyzer(model_path="./checkpoint-900").analyze_dataframe(df=posts,text_column="PostContent")
+        print("analise data")
+
+        ret['Timestamp']=ret['Timestamp'].dt.date
+        print("convert data")
+
+        ret=ret.groupby(['Timestamp','sentiment']).size().reset_index(name='PostContent')
+        print("count data")
+        # ret=ret.reset_index()
+        # print(ret)
+
+        # pos=ret.iloc[ret["sentiment"]=="positive"].
+        # neu=ret.iloc[ret["sentiment"]=="neutral"]
+        # neg=ret.iloc[ret["sentiment"]=="negative"]
+        # pos.groupby(['Produkthauptgruppe', 'Standort']).agg({'Menge' : np.sum})
+
+
+
+        # Return posts as JSON
+        return jsonify(ret.to_dict(orient='records')), 200
+
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+# TOP TOPICS SECTION 
+
 @app.route('/api/trend_analysis', methods=['POST'])
 def trend_analysis():
     data = request.json
@@ -276,7 +396,72 @@ def top_topics():
         return jsonify(top_topics_df.to_dict(orient='records'))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# TOPIC MODELLING SECTION   
+
+@app.route('/process_csv', methods=['POST'])
+def process_csv():
     
+
+
+    try:
+        csv_file = request.files['file']
+        df = pd.read_csv(csv_file)
+
+        # Preprocess data
+        df = pipeline.preprocess_data(df)
+        print(f"Preprocessed DataFrame size: {len(df)}")
+        print(df.head())
+
+        # Generate embeddings
+        texts = df['comment'].tolist()
+        embeddings = pipeline.generate_embeddings(texts)
+
+        # Debugging logs
+        print(f"Number of comments: {len(texts)}")
+        print(f"Embeddings shape: {embeddings.shape}")
+
+        # Validate embeddings
+        if embeddings.shape[0] != len(texts):
+            return jsonify({'error': f'Embeddings count ({embeddings.shape[0]}) does not match document count ({len(texts)}).'}), 400
+
+        # Fit pipeline
+        df, topic_info_dict, _ = pipeline.fit_transform(df, embeddings=embeddings)
+
+        response = {
+            'topics': topic_info_dict.get('labels', []),
+            'sizes': topic_info_dict.get('size', []),
+            'keywords': topic_info_dict.get('keywords', [])
+        }
+
+        return jsonify(response)
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# GET RECOMMENDATIONS FROM NEWSAPI
+
+@app.route('/recommend_news',methods=['POST'])
+def recommend_news():
+    try: 
+        csv_file = request.files.get('file')
+
+        df = pd.read_csv(csv_file)
+
+        top_topics_df = get_top_topics(df, column="comment", top_n=3)
+
+        api_key = "054e6c700b284a8ba57a138e0b0d1f8b"
+        recommendations = recommend_news_from_api(top_topics_df, api_key)
+        topic_urls_dict = {item[0]: item[1] for item in recommendations}
+
+        return jsonify({"recommendations": topic_urls_dict}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
 
 if __name__ == '__main__':
