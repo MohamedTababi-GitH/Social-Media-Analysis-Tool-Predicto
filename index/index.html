@@ -33,7 +33,8 @@
             <img class="logo_sources_small" src="img/Reddit_Icon_FullColor.png">
             <img class="logo_sources_small" src="img/bluesky-icon.png">
             <img class="logo_sources" src="img/yt_logo_rgb_dark.png">
-            <img class="logo_sources_small" src="img/Xlogo-white.png">     
+            <img class="logo_sources_small" src="img/Xlogo-white.png">
+
         </div>
     </section>
 
@@ -48,10 +49,10 @@
         <!-- pick your date-->
         <div class="calendar">
             <label for="start-date">Start Date:</label>
-            <input type="date" id="start-date-Table" name="start-date">
+            <input type="date" id="start-date" name="start-date">
 
             <label for="end-date">End Date:</label>
-            <input type="date" id="end-date-Table" name="end-date">
+            <input type="date" id="end-date" name="end-date">
         </div>
 
         <!-- button -->
@@ -67,7 +68,7 @@
                 <option value="Environment">Environment</option>
             </select>
 
-            <select name="dropdown" class="dropdown btn-dropdown" id="platform-select" onchange="getDFExample()">
+            <select name="dropdown" class="dropdown btn-dropdown" id="platform-select" onchange="handlePlatformChange()">
                 <option value="" disabled selected hidden>Choose platform ▼</option>
                 <option value="YouTube">YouTube</option>
                 <option value="Reddit">Reddit</option>
@@ -101,7 +102,7 @@
         </div>
 
         <div class="data-controls">
-            <button onclick="getDFExampleS()" class="btn-fetch">Fetch Database Data</button>
+            <button onclick="sentiment()" class="btn-fetch">Analyze Sentiment</button>
             <!-- <div class="dropdown">
                 <button class="btn-dropdown">Choose Topic ▼</button>
                 <div class="dropdown-menu">
@@ -113,8 +114,8 @@
                 </div>
             </div> -->
             <!--<button onclick="sentimenatlAnalisis()" class="btn-fetch">Fetch Database Data</button> -->
-            <select name="dropdown" class="dropdown btn-dropdown">
-                <option value="" disabled selected hidden>Fetch Data in Real-Time ▼</option>
+            <select name="dropdown" id="topic-sentiment" class="dropdown btn-dropdown">
+                <option value="" disabled selected hidden>Topic ▼</option>
                 <option value="Politics">Politics</option>
                 <option value="Food">Food</option>
                 <option value="Entertainment">Entertainment</option>
@@ -134,12 +135,12 @@
             </div> -->
 
 
-            <select name="dropdown" id="dropdown-sentiment" class="dropdown btn-dropdown">
+            <select name="dropdown" id="platform-sentiment" class="dropdown btn-dropdown">
                 <option value="" disabled selected hidden>Choose Platform ▼</option>
                 <option value="YouTube">YouTube</option>
                 <option value="Reddit">Reddit</option>
                 <option value="Bluesky">Bluesky</option>
-                <option value="X">X</option>
+                <option value="Twitter">Twitter</option>
             </select>
 
         </div>
@@ -220,10 +221,82 @@
 
     </section>
 
+
+    <!-- Highcharts Library -->
+    <!-- <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script>
+        // Highcharts Configuration
+        Highcharts.chart('sentiment-chart', {
+            title: {
+                text: 'Sentiment Analysis',
+                align: 'left'
+            },
+
+            subtitle: {
+                text: 'Positive, Neutral, and Negative Sentiment Distribution',
+                align: 'left'
+            },
+
+            yAxis: {
+                title: {
+                    text: 'Number of Mentions'
+                }
+            },
+
+            xAxis: {
+                title: {
+                    text: 'Time'
+                }
+            },
+
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+
+            series: [{
+                name: 'Positive',
+                color: 'green',
+                data: [120, 150, 90]
+
+            }, {
+                name: 'Neutral',
+                color: 'grey',
+                data: [80, 110, 70]
+            }, {
+                name: 'Negative',
+                color: 'red',
+                data: [40, 50, 30]
+            }],
+
+            responsive: {
+                rules: [{
+                    condition: {
+                        maxWidth: 300
+                    },
+                    chartOptions: {
+                        legend: {
+                            layout: 'horizontal',
+                            align: 'center',
+                            verticalAlign: 'bottom'
+                        }
+                    }
+                }]
+            }
+        });
+    </script> -->
+
+    </section>
+
     <!-- topic modeling -->
     <section id="topics" class="section ">
         <h2>Topic Modeling</h2>
         <p> Uncover the main subjects within the data </p>
+
+        
+        <!-- HIDE FOR NOW AS WE DO NOT KNOW IF ITS GONNA BE FROM DB
+
         <div class="calendar">
             <label for="start-date-model">Start Date:</label>
             <input type="date" id="start-date-model" name="start-date">
@@ -231,15 +304,18 @@
             <label for="end-date-model">End Date:</label>
             <input type="date" id="end-date-model" name="end-date">
         </div>
-
-        <!-- Highcharts Container -->
-        <!-- <div id="topics-chart"></div> -->
-
+        -->
+        <div class="blank"></div>
         <div class="data-controls">
-            <button onclick="getDFExampleM()" class="btn-fetch">Fetch Database Data</button>
+            <!-- <button onclick="getDFExampleM()" class="btn-fetch">Fetch Database Data</button> -->
 
+            <form id="uploadForm">
+                <label for="csvFile" class="csv">Choose File</label>
+                <input type="file" id="csvFile" name="file" accept=".csv" style="display:none" />
+                <button type="submit" id="analyze" class="csv">Analyze</button>
+            </form>
             <!--<button onclick="topicModeling()" class="btn-fetch">Fetch Database Data</button> -->
-            <select name="dropdown" class="dropdown btn-dropdown">
+            <!--<select name="dropdown" class="dropdown btn-dropdown">
                 <option value="" disabled selected hidden>Fetch Data in Real-Time ▼</option>
                 <option value="Politics">Politics</option>
                 <option value="Food">Food</option>
@@ -255,9 +331,9 @@
                 <option value="Reddit">Reddit</option>
                 <option value="Bluesky">Bluesky</option>
                 <option value="X">X</option>
-            </select>
+            </select>-->
 
-        </div>
+        </div> 
         <div id="topicsParent" class="chartSize" style="height:40vh;">
             <canvas id="topicsChart"></canvas>
         </div>
@@ -265,7 +341,8 @@
 
     </section>
 
-    <!-- trends(here i added top topics but we can change) -->
+    <!-- TOP TOPICS SECTION -->
+
     <section id="trends" class="section trends">
         <h2>Top Topics</h2>
         <p>Get the most discussed topics or check the frequency of a certain topic</p>
@@ -277,15 +354,6 @@
             <input type="date" id="end-date-trends" name="end-date">
         </div>
 
-        <!-- <div class="dropdown">
-            <button class="btn-dropdown">Choose Platform ▼</button>
-            <div class="dropdown-menu">
-                <a href="#">YouTube</a>
-                <a href="#">Reddit</a>
-                <a href="#">Bluesky</a>
-                <a href="#">X</a>
-            </div>
-        </div> -->
     <div class="data-controls">
 
         <select name="dropdown" class="dropdown btn-dropdown" id="topicM">
@@ -297,98 +365,46 @@
             <option value="Environment">Environment</option>
         </select>
         <button onclick="getTrendAnalysis()" class="btn-fetch">Fetch Database Data</button>
-        <!--<button onclick="trends()" class="btn-fetch">Fetch Database Data</button>-->
-
-        <!--     
-        <select name="dropdown" class="dropdown btn-dropdown">
-            <option value="" disabled selected hidden>Choose Platform ▼</option>
-            <option value="YouTube">YouTube</option>
-            <option value="Reddit">Reddit</option>
-            <option value="Bluesky">Bluesky</option>
-            <option value="X">X</option>
-        </select>
---> 
 
         <button class="btn-top10" onclick="getTopTopics()">Get Top 10 topics</button>
-        <button class="btn-top">Get Top Predefined Topics</button>
-        <!-- Highcharts Container -->
-        <!-- <div id="trends-chart"></div> -->
         </div>
         
         <div id="trendsParent" class="chartSize" style="height:40vh;">
             <canvas id="trendsChart"></canvas>
         </div>
-
-
     </section>
 
 
 
+    <!-- NEWS API SECTION-->
 
-    <!-- Highcharts Library -->
-    <!-- <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script>
-        // Highcharts Column Chart
-        Highcharts.chart('trends-chart', {
-            chart: {
-                type: 'column'
-            },
-            title: {
-                text: 'Top Topics Frequency Across Platforms'
-            },
-            subtitle: {
-                text: 'Source: Predicto Platform'
-            },
-            xAxis: {
-                categories: ['YouTube', 'Reddit', 'Bluesky'],
-                crosshair: true,
-                accessibility: {
-                    description: 'Platforms'
-                }
-            },
-            yAxis: {
-                min: 0,
-                title: {
-                    text: 'Frequency (mentions)'
-                }
-            },
-            tooltip: {
-                valueSuffix: ' mentions'
-            },
-            plotOptions: {
-                column: {
-                    pointPadding: 0.2,
-                    borderWidth: 0
-                }
-            },
-            series: [
-                {
-                    name: 'Topic A',
-                    data: [120, 95, 80],
-                    color: '#007bff'
-                },
-                {
-                    name: 'Topic B',
-                    data: [110, 85, 90],
-                    color: '#28a745'
-                },
-                {
-                    name: 'Topic C',
-                    data: [90, 75, 60],
-                    color: '#ffc107'
-                }
-            ]
-        });
-    </script> -->
+    <section id="news" class="news section">
+        <h2>News API</h2>
+        <p>Get recommendations for what you like</p>
+        
+        <form id="newsUploadForm">
+            <label for="newsCsvFile" class="csvnews">Choose File</label>
+            <input type="file" id="newsCsvFile" name="file" accept=".csv" style="display:none" />
+            <button type="submit" id="analyzeNews" class="csvnews">Analyze</button>
+        </form>
 
+        <div id="newsRecommendations" class="news-recommendations">
+            <h3>Recommended Articles</h3>
+            <table id="newsResultsTable" class="styled-table">
+                <!-- Table content will be dynamically populated -->
+            </table>
+        </div>
     </section>
+
+
 
 
     <!-- about us -->
     <section id="about" class="section about">
         <h2>About Us</h2>
         <p>
-            Predicto! is your ultimate platform for accurate predictions. We provide insights and analysis
+            Predicto! is your ultimate platform for accurate predictions.<br> 
+            We provide insights and analysis
             powered by data to meet your needs and help you make smarter decisions.
         </p>
     </section>
@@ -415,5 +431,4 @@
         <img src="img/main.png" alt="Icon">
     </div>
 </body>
-
 </html>

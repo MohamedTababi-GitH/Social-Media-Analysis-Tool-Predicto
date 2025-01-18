@@ -37,7 +37,7 @@ class TopicModelingPipelineBertopic:
                  n_components: int = 5,
                  nr_topics=25,
                  random_state: int = 42,
-                 openai_api_key: str = None,
+                 openai_api_key: str =None,
                  log_level: str = 'INFO'):
         """
         Initialize the topic modeling pipeline using BERTopic with DBSCAN clustering.
@@ -133,61 +133,39 @@ class TopicModelingPipelineBertopic:
         """Preprocess the input data."""
         self.logger.info("Starting data preprocessing")
         total_rows = len(df)
-        
+
         if 'comment' not in df.columns:
             self.logger.error("DataFrame missing 'comment' column")
             raise ValueError("The DataFrame must contain a column named 'comment'.")
 
         df = df[df['comment'].notna()]
-        self.logger.debug(f"Removed {total_rows - len(df)} null comments")
-        
-        with tqdm(total=8, desc="Preprocessing steps") as pbar:
-            # Clean text
-            df['comment'] = df['comment'].apply(lambda x: x.strip() if isinstance(x, str) else '')
-            df = df[df['comment'] != ""]
-            pbar.update(1)
-            
-            # Remove URLs
-            df['comment'] = df['comment'].apply(lambda x: re.sub(r"http\S+|https\S+", "", x))
-            pbar.update(1)
-            
-            # Remove subreddit names and user mentions
-            df['comment'] = df['comment'].apply(lambda x: re.sub(r"r/\w+|u/\w+", "", x))
-            pbar.update(1)
-            
-            # Remove social media mentions and hashtags
-            df['comment'] = df['comment'].apply(lambda x: re.sub(r"@\w+|#\w+", "", x))
-            pbar.update(1)
-            
-            # Remove timestamps
-            df['comment'] = df['comment'].apply(lambda x: re.sub(r"\b\d+:\d+\b|\b\d+h\d+m\b", "", x))
-            pbar.update(1)
-            
-            # Normalize emojis
-            df['comment'] = df['comment'].apply(lambda x: emoji.demojize(x, delimiters=("", "")) if isinstance(x, str) else x)
-            pbar.update(1)
-            
-            # Text normalization
-            df['comment'] = df['comment'].str.lower()
-            df['comment'] = df['comment'].apply(lambda x: re.sub(r'\s+', ' ', x) if isinstance(x, str) else x)
-            df['comment'] = df['comment'].apply(lambda x: re.sub(r'[^\w\s]', '', x) if isinstance(x, str) else x)
-            pbar.update(1)
-            
-            # Remove duplicates and short comments
-            initial_len = len(df)
-            df = df.drop_duplicates(subset='comment', keep='first')
-            df['comment_length'] = df['comment'].str.len()
-            df = df[df['comment_length'] > 20].reset_index(drop=True)
-            df = df.drop(columns=['comment_length'])
-            pbar.update(1)
+        self.logger.debug(f"Removed {total_rows - len(df)} rows with null comments")
+
+        # Preprocessing steps
+        df['comment'] = df['comment'].apply(lambda x: x.strip() if isinstance(x, str) else '')
+        df = df[df['comment'] != ""]
+
+        # Remove duplicates
+        initial_len = len(df)
+        df = df.drop_duplicates(subset='comment', keep='first')
+        self.logger.debug(f"Removed {initial_len - len(df)} duplicate comments")
+
+        # Remove short comments
+        df['comment_length'] = df['comment'].str.len()
+        df = df[df['comment_length'] > 20]
+        self.logger.debug(f"Removed rows with short comments. Remaining rows: {len(df)}")
 
         df = df.reset_index(drop=True)
         self.logger.info(f"Preprocessing complete. Final dataset size: {len(df)} comments")
         return df
+
     
     def generate_embeddings(self, texts: List[str]) -> np.ndarray:
         """Generate embeddings for the input texts."""
+
         self.logger.info("Generating embeddings")
+        self.logger.info(f"Number of input texts: {len(texts)}")
+        
         start_time = time.time()
         embeddings = self.embedding_model.encode(
             texts,
@@ -196,7 +174,17 @@ class TopicModelingPipelineBertopic:
         )
         duration = time.time() - start_time
         self.logger.info(f"Embeddings generated in {duration:.2f} seconds")
+
+        # Validate embeddings
+        if embeddings.shape[0] != len(texts):
+            raise ValueError(f"Embeddings count ({embeddings.shape[0]}) does not match document count ({len(texts)}).")
+        if embeddings.ndim != 2:
+            raise ValueError("Embeddings must be a 2D NumPy array.")
+
+        self.logger.info(f"Embeddings shape: {embeddings.shape}")
         return embeddings
+
+
     
     def save_embeddings(self, embeddings: np.ndarray, save_folder: str = 'data'):
         """Saves embeddings in the file"""
@@ -238,47 +226,58 @@ Carefully analyze both the comments and keywords to determine appropriate topic 
         """Run the complete topic modeling pipeline."""
         start_time = time.time()
         self.logger.info("Starting topic modeling pipeline")
-        
+
         # Preprocess data
         df = self.preprocess_data(df)
         texts = df['comment'].tolist()
-        
+
+        # Ensure we have valid texts
+        if not texts:
+            raise ValueError("No valid comments found after preprocessing.")
+
+        # Generate embeddings if not provided
         if embeddings is None:
             self.logger.info("No embeddings were passed, generating embeddings and saving them")
             embeddings = self.generate_embeddings(texts)
-            #self.save_embeddings(embeddings)
-            
+
+        # Validate embeddings
+        self.logger.info(f"Number of texts: {len(texts)}")
+        self.logger.info(f"Shape of embeddings: {embeddings.shape}")
+        if embeddings.shape[0] != len(texts):
+            raise ValueError(f"Embeddings count ({embeddings.shape[0]}) does not match document count ({len(texts)}).")
+        if embeddings.ndim != 2:
+            raise ValueError("Embeddings must be a 2D NumPy array.")
+
         # Fit BERTopic model
         self.logger.info("Fitting BERTopic model")
         topics, probs = self.topic_model.fit_transform(texts, embeddings)
-        
-        
+
         # Get topic information
         topic_info = self.topic_model.get_topic_info()
-        
+
         # Add results to DataFrame
         df['topic_cluster'] = topics
-        #df['topic_probability'] = probs.max(axis=1)
         df['topic_label'] = df['topic_cluster'].map(
             {topic: info for topic, info in self.topic_model.topic_labels_.items()}
         )
-        
+
         # Prepare topic info dictionary
         topic_info_dict = {
             'labels': [info for topic, info in sorted(self.topic_model.topic_labels_.items()) if topic != -1],
-            'keywords': [list(zip(*self.topic_model.get_topic(i)))[0] for i in range(len(topic_info)-1)],  # Exclude outlier topic
+            'keywords': [list(zip(*self.topic_model.get_topic(i)))[0] for i in range(len(topic_info) - 1)],  # Exclude outlier topic
             'size': topic_info['Count'].tolist()[1:]  # Exclude outlier topic
         }
-        
+
         duration = time.time() - start_time
         self.logger.info(f"Pipeline completed in {duration:.2f} seconds")
-        
+
         # Log topic distribution
         for topic_idx, (label, size) in enumerate(zip(topic_info_dict['labels'], topic_info_dict['size'])):
             self.logger.info(f"Topic {topic_idx}: {label} ({size} documents)")
             self.logger.debug(f"Keywords: {', '.join(topic_info_dict['keywords'][topic_idx][:10])}")
-        
+
         return df, topic_info_dict, self.topic_model
+
     
     def reduce_topics(self, df, nr_topics=20):
         texts = df['comment'].tolist()
@@ -364,5 +363,5 @@ def create_topics(csvpath: str, openai_key: str):
 
 if __name__ == "__main__":
     csvpath = 'CSV_data/fulldata.csv'
-    openai_key = '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'
+    openai_key = ''
     create_topics(csvpath, openai_key)

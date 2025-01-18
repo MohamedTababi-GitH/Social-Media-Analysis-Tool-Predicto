@@ -3,10 +3,13 @@ from sklearn.metrics import classification_report
 import numpy as np
 from scipy.special import softmax
 import pandas as pd
+import torch
 
 class SentimentAnalyzer:
     def __init__(self, model_path):
         # load model and tokenizer from path
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
         self.model = AutoModelForSequenceClassification.from_pretrained(model_path)
 

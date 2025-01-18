@@ -182,7 +182,7 @@ header {
 
 }
 
-.btn-fetch,.btn-top10,.btn-top,
+.btn-fetch,.btn-top10,.btn-top,.csv,.csvnews,
 .btn-dropdown {
     padding: 10px 20px;
     font-size: 16px;
@@ -196,10 +196,18 @@ header {
     appearance:none;
 }
 
-.btn-fetch:hover,.btn-top10:hover,.btn-top:hover,
+.btn-fetch:hover,.btn-top10:hover,.btn-top:hover,.csv:hover,.csvnews:hover,
 .btn-dropdown:hover {
     background-color: #f0ad4e;
 }
+
+.data-controls label {
+    margin-right: 20px; /* Add space between buttons */
+    margin-bottom: 10px; /* Optional: Add vertical spacing */
+}
+
+
+
 
 .dropdown {
     position: relative;
@@ -308,3 +316,52 @@ header {
 
 }
 
+/* NEWS TABLE */
+
+.news-recommendations {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    width: 65%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* style the table */
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 16px;
+    text-align: left;
+    background-color: white;
+}
+
+/* table headers */
+.styled-table th {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    text-align: left;
+}
+
+/* table rows */
+.styled-table td, .styled-table th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+/* links inside the table */
+.styled-table a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.styled-table a:hover {
+    text-decoration: underline;
+}
+
+
+  

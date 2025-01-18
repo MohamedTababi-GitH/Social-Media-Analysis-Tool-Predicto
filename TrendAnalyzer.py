@@ -1,5 +1,7 @@
 import modin.pandas as pd
+from newsapi import NewsApiClient
 import re
+import pandas as pd
 from collections import Counter
 from nltk.corpus import stopwords
 import nltk
@@ -86,6 +88,33 @@ def get_top_topics(data, column="PostContent", start_date=None, end_date=None, t
     top_topics = word_counts.most_common(top_n)
     return pd.DataFrame(top_topics, columns=["Topic", "Frequency"])
 
+
+def recommend_news_from_api(topics_df, api_key):
+    newsapi = NewsApiClient(api_key=api_key)
+    recommendations = []
+    
+    for _, row in topics_df.iterrows():
+        topic = row["Topic"]
+
+        # Fetch relevant news articles
+        articles = newsapi.get_everything(
+            q=topic,
+            sources='bbc-news',
+            domains='bbc.co.uk,techcrunch.com',
+            language="en",
+            sort_by="relevancy",
+            from_param="2024-12-18",  # Adjusted start date
+            to="2025-01-16",
+            page_size=10
+        )
+
+        # Extract article URLs if available
+        urls = [article["url"] for article in articles.get("articles", []) if "url" in article]
+        
+        if urls:
+            recommendations.append((topic, urls[:5]))  # Return only top 5
+
+    return recommendations
 
 #tunnel, engine = get_ssh_db_connection()
 #parameters

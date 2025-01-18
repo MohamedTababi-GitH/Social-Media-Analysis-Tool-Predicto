@@ -52,7 +52,7 @@ def query_posts(engine, platforms=None, start_date=None, end_date=None, topic=No
                 start_date="2023-01-01",
                 end_date="2023-12-31",
                 topic="",
-                limit=10000
+                limit=1000   
             )
     """
 
