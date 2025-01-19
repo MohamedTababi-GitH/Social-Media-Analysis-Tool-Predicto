@@ -363,5 +363,5 @@ def create_topics(csvpath: str, openai_key: str):
 
 if __name__ == "__main__":
     csvpath = 'CSV_data/fulldata.csv'
-    openai_key = ''
+    openai_key = '---ADD API KEY----'
     create_topics(csvpath, openai_key)

@@ -29,7 +29,7 @@ eps=0.8,
 min_samples=5, 
 nr_topics=10, 
 log_level='INFO',
-openai_api_key='API_KEY'
+openai_api_key='------ADD API KEY HERE--------'
 )
 
 def extract_subreddit_from_url(url):
@@ -452,7 +452,7 @@ def recommend_news():
 
         top_topics_df = get_top_topics(df, column="comment", top_n=3)
 
-        api_key = "054e6c700b284a8ba57a138e0b0d1f8b"
+        api_key = "------ADD API KEY HERE ---------"
         recommendations = recommend_news_from_api(top_topics_df, api_key)
         topic_urls_dict = {item[0]: item[1] for item in recommendations}
 
