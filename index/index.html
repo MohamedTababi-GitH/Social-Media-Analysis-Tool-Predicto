@@ -298,27 +298,27 @@
         <p> Uncover the main subjects within the data </p>
 
         
-        <!-- HIDE FOR NOW AS WE DO NOT KNOW IF ITS GONNA BE FROM DB
+        <!-- HIDE FOR NOW AS WE DO NOT KNOW IF ITS GONNA BE FROM DB -->
 
         <div class="calendar">
-            <label for="start-date-model">Start Date:</label>
-            <input type="date" id="start-date-model" name="start-date">
+            <label for="start-date-topic">Start Date:</label>
+            <input type="date" id="start-date-topic" name="start-date">
 
-            <label for="end-date-model">End Date:</label>
-            <input type="date" id="end-date-model" name="end-date">
+            <label for="end-date-topic">End Date:</label>
+            <input type="date" id="end-date-topic" name="end-date">
         </div>
-        -->
+       
         <div class="blank"></div>
         <div class="data-controls">
             <!-- <button onclick="getDFExampleM()" class="btn-fetch">Fetch Database Data</button> -->
 
-            <form id="uploadForm">
+            <!-- <form id="uploadForm">
                 <label for="csvFile" class="csv">Choose File</label>
                 <input type="file" id="csvFile" name="file" accept=".csv" style="display:none" />
                 <button type="submit" id="analyze" class="csv">Analyze</button>
-            </form>
-            <!--<button onclick="topicModeling()" class="btn-fetch">Fetch Database Data</button> -->
-            <!--<select name="dropdown" class="dropdown btn-dropdown">
+            </form> -->
+            <button onclick="topicModeling()" class="btn-fetch">Analyze</button>
+            <select name="dropdown" id="topic-topic"class="dropdown btn-dropdown">
                 <option value="" disabled selected hidden>Fetch Data in Real-Time ▼</option>
                 <option value="Politics">Politics</option>
                 <option value="Food">Food</option>
@@ -328,13 +328,13 @@
             </select>
 
 
-            <select name="dropdown" id="dropdown3" class="dropdown btn-dropdown">
+            <select name="dropdown" id="platform-topic" class="dropdown btn-dropdown">
                 <option value="" disabled selected hidden>Choose Platform ▼</option>
                 <option value="YouTube">YouTube</option>
                 <option value="Reddit">Reddit</option>
                 <option value="Bluesky">Bluesky</option>
-                <option value="X">X</option>
-            </select>-->
+                <option value="Twitter">Twitter</option>
+            </select>
 
         </div> 
         <div id="topicsParent" class="chartSize" style="height:40vh;">

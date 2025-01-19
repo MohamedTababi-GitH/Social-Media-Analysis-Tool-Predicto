@@ -29,7 +29,7 @@ eps=0.8,
 min_samples=5, 
 nr_topics=10, 
 log_level='INFO',
-openai_api_key='------ADD API KEY HERE--------'
+openai_api_key='----API KEY---'
 )
 
 def extract_subreddit_from_url(url):
@@ -439,6 +439,115 @@ def process_csv():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+
+@app.route('/topic_modeling', methods=['POST'])
+def topic_modeling():
+    
+    try:
+        # Establish SSH and DB connection
+        tunnel, db_engine = get_ssh_db_connection()
+        print("SSH Tunnel and DB connection established successfully.")
+  
+
+        # Parse request data
+        data = request.json
+        start_date = data.get('start_date')
+
+        end_date = data.get('end_date')
+        platformName = data.get('platforms')
+        topic = data.get('topic')
+        # limit = data.get('limit')
+
+        # Construct the query
+        query = """
+            SELECT 
+                hp.Timestamp, 
+                spd.PostContent
+            FROM Hub_Post hp
+            JOIN Platform p ON hp.PlatformID = p.PlatformID
+            JOIN Sat_PostDetails spd ON hp.PostID = spd.PostID
+            WHERE 1=1
+        """
+
+
+
+
+        params = {}
+
+        if start_date:
+            query += " AND hp.Timestamp >= :start_date"
+            params['start_date'] = start_date
+        if end_date:
+            query += " AND hp.Timestamp <= :end_date"
+            params['end_date'] = end_date
+
+        if platformName:
+            query += " AND p.PlatformName = :platformName"
+            params['platformName'] = platformName
+        if topic:
+            query += " AND spd.SearchedTopic = :topic"
+            params['topic'] = topic
+        query += " ORDER BY hp.Timestamp ASC"
+        # if limit:
+        #     query += " Limit :limit"
+        #     params['limit'] = limit
+        query += " Limit 3000"
+
+
+        # Execute the query
+        with db_engine.connect() as connection:
+            result = connection.execute(text(query), params)
+            rows = result.fetchall()  # Fetch all rows as a list of tuples
+            column_names = result.keys()  # Get column names from the query
+
+        # Convert rows to dictionaries explicitly
+        posts = [dict(zip(column_names, row)) for row in rows]
+        posts=pd.DataFrame(posts).rename(columns={"PostContent": "comment"},inplace=False)
+        print(posts.columns)
+
+        # Preprocess data
+        posts = pipeline.preprocess_data(posts)
+        print(f"Preprocessed DataFrame size: {len(posts)}")
+        # print(df.head())
+
+
+        # Generate embeddings
+        texts = posts['comment'].tolist()
+        embeddings = pipeline.generate_embeddings(texts)
+
+        # Debugging logs
+        print(f"Number of comments: {len(texts)}")
+        print(f"Embeddings shape: {embeddings.shape}")
+
+        # Validate embeddings
+        if embeddings.shape[0] != len(texts):
+            return jsonify({'error': f'Embeddings count ({embeddings.shape[0]}) does not match document count ({len(texts)}).'}), 400
+
+        # Fit pipeline
+        df, topic_info_dict, _ = pipeline.fit_transform(posts, embeddings=embeddings)
+
+        response = {
+            'topics': topic_info_dict.get('labels', []),
+            'sizes': topic_info_dict.get('size', []),
+            'keywords': topic_info_dict.get('keywords', [])
+        }
+
+        return jsonify(response)
+
+
+
+        # Return posts as JSON
+        return jsonify(ret.to_dict(orient='records')), 200
+
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+
+
 
 
 # GET RECOMMENDATIONS FROM NEWSAPI

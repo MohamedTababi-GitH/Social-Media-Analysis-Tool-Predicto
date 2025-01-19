@@ -343,7 +343,7 @@ async function analyzeSentiment() {
 
 
 function sentiment(data) {
-  console.log("Processing Sentiment Data:", data);
+  // console.log("Processing Sentiment Data:", data);
 
   const pos = data
       .filter(item => item.sentiment === "positive")
@@ -563,20 +563,59 @@ sentChartInstance= new Chart(document.getElementById('sentimentalChart'), {
 ////////////// TOPIC MODELLING SECTION ////////////
 //get timeframe for **topic modelling section**
 
-document.getElementById("uploadForm").addEventListener("submit", async (e) => {
-  e.preventDefault(); 
-  const fileInput = document.getElementById("csvFile");
-  if (fileInput.files.length === 0) {
-    alert("Please choose a file to upload.");
-    return;
-  }
-  const formData = new FormData();
-  formData.append("file", fileInput.files[0]);
+// document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+//   e.preventDefault(); 
+//   const fileInput = document.getElementById("csvFile");
+//   if (fileInput.files.length === 0) {
+//     alert("Please choose a file to upload.");
+//     return;
+//   }
+//   const formData = new FormData();
+//   formData.append("file", fileInput.files[0]);
+//   try {
+//     document.getElementById("topicsParent").innerHTML = '<p>Processing... Please wait.</p>';
+//     const response = await fetch("http://localhost:5000/process_csv", {
+//       method: "POST",
+//       body: formData,
+//     });
+//     if (!response.ok) {
+//       const errorData = await response.json();
+//       alert(`Error: ${errorData.error}`);
+//       return;
+//     }
+//     const data = await response.json();
+//     console.log("Data received from backend:", data);
+//     if (data.error) {
+//       alert(`Error: ${data.error}`);
+//     } else {
+//       renderTopicsChart(data.topics, data.sizes, data.keywords);
+//     }
+//   } catch (error) {
+//     console.error("Error:", error);
+//     alert("An error occurred while processing the file.");
+//   }
+// });
+
+
+
+
+async function topicModeling(){
+
+  let startDate= document.getElementById(`start-date-topic`).value;
+  let endDate= document.getElementById(`end-date-topic`).value;
+  let topic= document.getElementById(`topic-topic`).value;
+  let platformName= document.getElementById(`platform-topic`).value;
+
+
+
+  // const formData = new FormData();
+  // formData.append("file", fileInput.files[0]);
   try {
     document.getElementById("topicsParent").innerHTML = '<p>Processing... Please wait.</p>';
-    const response = await fetch("http://localhost:5000/process_csv", {
+    const response = await fetch("http://localhost:5000/topic_modeling", {
       method: "POST",
-      body: formData,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({start_date: startDate,end_date: endDate,topic:topic,platforms: platformName})
     });
     if (!response.ok) {
       const errorData = await response.json();
@@ -585,17 +624,16 @@ document.getElementById("uploadForm").addEventListener("submit", async (e) => {
     }
     const data = await response.json();
     console.log("Data received from backend:", data);
-    if (data.error) {
-      alert(`Error: ${data.error}`);
-    } else {
-      renderTopicsChart(data.topics, data.sizes, data.keywords);
-    }
+
+    renderTopicsChart(data.topics, data.sizes, data.keywords);
+
   } catch (error) {
     console.error("Error:", error);
     alert("An error occurred while processing the file.");
   }
-});
 
+
+}
 
 function renderTopicsChart(topics, sizes, keywords) {
   const topicsParent = document.getElementById("topicsParent");
@@ -658,6 +696,8 @@ function getRandomColor() {
   return `rgba(${r}, ${g}, ${b}, 0.9)`;
 }
 function renderPlaceholderChart() {
+
+  document.getElementById("uploadForm").preventDefault();
   const topicsParent = document.getElementById("topicsParent");
   // Clear any existing content
   topicsParent.innerHTML = '<canvas id="topicsChart"></canvas>';

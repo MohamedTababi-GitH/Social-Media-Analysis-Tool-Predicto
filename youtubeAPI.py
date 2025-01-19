@@ -4,7 +4,7 @@ from googleapiclient.discovery import build
 import pandas as pd
 
 from datetime import datetime
-import youtubeAPI
+
 
 
 API_KEY=    ["AIzaSyBCTyv5uEZhMh8IJaWuMA_yegzxUonja1k",
@@ -161,7 +161,7 @@ def getCommentDataMaster(topic,   start_date,   end_date,   number_of_data):
         #get month videos. if we reach the api daily limit then it will stop
         print("here")
         try:
-            df = youtubeAPI.getVideo(topic, vid_countMonth, start_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            df = getVideo(topic, vid_countMonth, start_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
                                      end_date.strftime("%Y-%m-%dT%H:%M:%SZ"), API_KEY=API_KEY[0])
             dflist.append(df)
 
