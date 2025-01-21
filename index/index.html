@@ -291,13 +291,47 @@
     </script> -->
 
     </section>
+    <!--METRICS-->
+    <section id="metrics" class="section">
+        <h2>Metrics Analysis</h2>
+        <p>Choose your time frame and topic to get the engagement insights from the database.</p>
+        
+        <div class="calendar">
+            <label for="start-date-metric">Start Date:</label>
+            <input type="date" id="start-date-metric" name="start-date">
+    
+            <label for="end-date-metric">End Date:</label>
+            <input type="date" id="end-date-metric" name="end-date">
+        </div>
+    
+        <div class="data-controls">
+            <select name="dropdown" id="topic-metric" class="dropdown btn-dropdown">
+                <option value="" disabled selected hidden>Topic ▼</option>
+                <option value="Politics">Politics</option>
+                <option value="Food">Food</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Technology">Technology</option>
+                <option value="Environment">Environment</option>
+            </select>
+            
+            <button id="analyze-btn" class="btn-fetch">Analyze DB Metrics</button>
+        </div>
+        <div id="metricParent" class="chartSize" style="height:40vh;">
+            <canvas id="engagementChart"></canvas>
+        </div>
+    </section>
+    
+    
+    
 
+
+    <!-- TOPIC MODELLING -->
     <!-- topic modeling -->
     <section id="topics" class="section ">
         <h2>Topic Modeling</h2>
         <p> Uncover the main subjects within the data </p>
 
-        
+
         <!-- HIDE FOR NOW AS WE DO NOT KNOW IF ITS GONNA BE FROM DB -->
 
         <div class="calendar">
@@ -307,7 +341,7 @@
             <label for="end-date-topic">End Date:</label>
             <input type="date" id="end-date-topic" name="end-date">
         </div>
-       
+
         <div class="blank"></div>
         <div class="data-controls">
             <!-- <button onclick="getDFExampleM()" class="btn-fetch">Fetch Database Data</button> -->
@@ -317,7 +351,7 @@
                 <input type="file" id="csvFile" name="file" accept=".csv" style="display:none" />
                 <button type="submit" id="analyze" class="csv">Analyze</button>
             </form> -->
-            <button onclick="topicModeling()" class="btn-fetch">Analyze</button>
+
             <select name="dropdown" id="topic-topic"class="dropdown btn-dropdown">
                 <option value="" disabled selected hidden>Fetch Data in Real-Time ▼</option>
                 <option value="Politics">Politics</option>
@@ -335,8 +369,8 @@
                 <option value="Bluesky">Bluesky</option>
                 <option value="Twitter">Twitter</option>
             </select>
-
-        </div> 
+            <button onclick="topicModeling()" class="btn-fetch">Analyze</button>
+        </div>
         <div id="topicsParent" class="chartSize" style="height:40vh;">
             <canvas id="topicsChart"></canvas>
         </div>

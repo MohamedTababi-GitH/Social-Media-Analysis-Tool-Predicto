@@ -160,6 +160,8 @@ header {
     color: #333;
 }
 
+
+
 .calendar input[type="date"] {
     padding: 5px 10px;
     font-size: 16px;
@@ -182,7 +184,7 @@ header {
 
 }
 
-.btn-fetch,.btn-top10,.btn-top,.csv,.csvnews,
+.btn-fetch,.btn-top10,.btn-top,.csv,.csvnews,.btn-metrics,
 .btn-dropdown {
     padding: 10px 20px;
     font-size: 16px;
@@ -196,7 +198,7 @@ header {
     appearance:none;
 }
 
-.btn-fetch:hover,.btn-top10:hover,.btn-top:hover,.csv:hover,.csvnews:hover,
+.btn-fetch:hover,.btn-top10:hover,.btn-top:hover,.csv:hover,.btn-metrics:hover,.csvnews:hover,
 .btn-dropdown:hover {
     background-color: #f0ad4e;
 }

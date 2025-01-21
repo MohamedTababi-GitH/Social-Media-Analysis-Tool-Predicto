@@ -217,7 +217,7 @@ async function handlePlatformChange() {
               topic: topic,
               start_date: startDate,
               end_date: endDate,
-              //limit: 100,
+              limit: 100,
           };
           break;
       case 'Reddit':
@@ -343,7 +343,7 @@ async function analyzeSentiment() {
 
 
 function sentiment(data) {
-  // console.log("Processing Sentiment Data:", data);
+  console.log("Processing Sentiment Data:", data);
 
   const pos = data
       .filter(item => item.sentiment === "positive")
@@ -559,81 +559,199 @@ sentChartInstance= new Chart(document.getElementById('sentimentalChart'), {
 });
 //*/
 
+//////////////// METRICS SECTION //////////////////
+document.addEventListener('DOMContentLoaded', () => {
+  let engagementChartInstance; // Chart instance tracker
+  const ctx = document.getElementById('engagementChart').getContext('2d');
+
+  // Placeholder Chart
+  function createPlaceholderChart() {
+    const placeholderData = {
+      labels: [''],
+      datasets: [
+        {
+          label: 'Retweets',
+          data: [],
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: 'Replies',
+          data: [],
+          borderColor: 'rgb(54, 235, 22)',
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: 'Likes',
+          data: [],
+          borderColor: 'rgb(236, 19, 110)',
+          borderWidth: 2,
+          fill: false,
+        },
+      ],
+    };
+
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { title: { display: true, text: 'Date' } },
+        y: { title: { display: true, text: 'Engagement Count' } },
+      },
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: { mode: 'index', intersect: false },
+      },
+    };
+
+    if (engagementChartInstance) {
+      engagementChartInstance.destroy();
+    }
+
+    engagementChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: placeholderData,
+      options: options,
+    });
+  }
+
+  // Update Chart with New Data
+  async function updateChart(data) {
+    const labels = data.map(item => item.date);
+    const retweetData = data.map(item => item.retweetCount);
+    const replyData = data.map(item => item.replyCount);
+    const likeData = data.map(item => item.likeCount);
+
+    const newData = {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Retweets',
+          data: retweetData,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: 'Replies',
+          data: replyData,
+          borderColor: 'rgb(54, 235, 22)',
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: 'Likes',
+          data: likeData,
+          borderColor: 'rgb(236, 19, 110)',
+          borderWidth: 2,
+          fill: false,
+        },
+      ],
+    };
+
+    if (engagementChartInstance) {
+      engagementChartInstance.destroy();
+    }
+
+    engagementChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: newData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { title: { display: true, text: 'Date' } },
+          y: { title: { display: true, text: 'Engagement Count' } },
+        },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: { mode: 'index', intersect: false },
+        },
+      },
+    });
+  }
+
+  // Analyze Metrics
+  async function analyzeMetrics() {
+    const startDate = document.getElementById('start-date-metric').value;
+    const endDate = document.getElementById('end-date-metric').value;
+    const keyword = document.getElementById('topic-metric').value;
+
+    if (!startDate || !endDate || !keyword) {
+      alert('Please fill in all fields before analyzing.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/analyze_metrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start_date: startDate, end_date: endDate, keyword: keyword }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Received Data:', data);
+      updateChart(data);
+    } catch (error) {
+      console.error('Error analyzing metrics:', error);
+      alert(`Failed to analyze metrics: ${error.message}`);
+    }
+  }
+
+  document.getElementById('analyze-btn').addEventListener('click', analyzeMetrics);
+  createPlaceholderChart();
+});
+
+
+
+
+
+
 
 ////////////// TOPIC MODELLING SECTION ////////////
 //get timeframe for **topic modelling section**
 
-// document.getElementById("uploadForm").addEventListener("submit", async (e) => {
-//   e.preventDefault(); 
-//   const fileInput = document.getElementById("csvFile");
-//   if (fileInput.files.length === 0) {
-//     alert("Please choose a file to upload.");
-//     return;
-//   }
-//   const formData = new FormData();
-//   formData.append("file", fileInput.files[0]);
-//   try {
-//     document.getElementById("topicsParent").innerHTML = '<p>Processing... Please wait.</p>';
-//     const response = await fetch("http://localhost:5000/process_csv", {
-//       method: "POST",
-//       body: formData,
-//     });
-//     if (!response.ok) {
-//       const errorData = await response.json();
-//       alert(`Error: ${errorData.error}`);
-//       return;
-//     }
-//     const data = await response.json();
-//     console.log("Data received from backend:", data);
-//     if (data.error) {
-//       alert(`Error: ${data.error}`);
-//     } else {
-//       renderTopicsChart(data.topics, data.sizes, data.keywords);
-//     }
-//   } catch (error) {
-//     console.error("Error:", error);
-//     alert("An error occurred while processing the file.");
-//   }
-// });
-
-
-
-
 async function topicModeling(){
 
-  let startDate= document.getElementById(`start-date-topic`).value;
-  let endDate= document.getElementById(`end-date-topic`).value;
-  let topic= document.getElementById(`topic-topic`).value;
-  let platformName= document.getElementById(`platform-topic`).value;
+    let startDate= document.getElementById(`start-date-topic`).value;
+    let endDate= document.getElementById(`end-date-topic`).value;
+    let topic= document.getElementById(`topic-topic`).value;
+    let platformName= document.getElementById(`platform-topic`).value;
 
 
+    //const formData = new FormData();
+    //formData.append("file", fileInput.files[0]);
+    try {
+        document.getElementById("topicsParent").innerHTML = '<p>Processing... Please wait.</p>';
+        const response = await fetch("http://localhost:5000/topic_modeling", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({start_date: startDate,end_date: endDate,topic:topic,platforms: platformName})
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            alert(`Error: ${errorData.error}`);
+            return;
+        }
+        const data = await response.json();
+        console.log("Data received from backend:", data);
 
-  // const formData = new FormData();
-  // formData.append("file", fileInput.files[0]);
-  try {
-    document.getElementById("topicsParent").innerHTML = '<p>Processing... Please wait.</p>';
-    const response = await fetch("http://localhost:5000/topic_modeling", {
-      method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({start_date: startDate,end_date: endDate,topic:topic,platforms: platformName})
-    });
-    if (!response.ok) {
-      const errorData = await response.json();
-      alert(`Error: ${errorData.error}`);
-      return;
+        renderTopicsChart(data.topics, data.sizes, data.keywords);
+
+    } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred while processing the file.");
     }
-    const data = await response.json();
-    console.log("Data received from backend:", data);
-
-    renderTopicsChart(data.topics, data.sizes, data.keywords);
-
-  } catch (error) {
-    console.error("Error:", error);
-    alert("An error occurred while processing the file.");
-  }
 
 
 }
+
 
 function renderTopicsChart(topics, sizes, keywords) {
   const topicsParent = document.getElementById("topicsParent");
@@ -696,8 +814,6 @@ function getRandomColor() {
   return `rgba(${r}, ${g}, ${b}, 0.9)`;
 }
 function renderPlaceholderChart() {
-
-  document.getElementById("uploadForm").preventDefault();
   const topicsParent = document.getElementById("topicsParent");
   // Clear any existing content
   topicsParent.innerHTML = '<canvas id="topicsChart"></canvas>';

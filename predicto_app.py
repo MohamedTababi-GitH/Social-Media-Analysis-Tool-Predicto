@@ -29,7 +29,7 @@ eps=0.8,
 min_samples=5, 
 nr_topics=10, 
 log_level='INFO',
-openai_api_key='----API KEY---'
+openai_api_key='---INSERT KEY HERE------'
 )
 
 def extract_subreddit_from_url(url):
@@ -360,6 +360,75 @@ def sentiment_analysis():
         print(f"Error: {str(e)}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
+# METRICS SECTION
+@app.route('/api/analyze_metrics', methods=['POST'])
+def analyze_metrics():
+    try:
+        # Establish SSH and DB connection
+        tunnel, db_engine = get_ssh_db_connection()
+        print("SSH Tunnel and DB connection established successfully.")
+
+        # Parse request data
+        data = request.json
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        topic = data.get('topic')
+
+        # Construct the query
+        query = """
+            SELECT 
+                hp.Timestamp AS createdAt,
+                spd.PostContent AS text,
+                spd.NumberOfReposts AS retweetCount,
+                spd.NumberOfComments AS replyCount,
+                spd.NumberOfLikes AS likeCount
+            FROM Hub_Post hp
+            JOIN Platform p ON hp.PlatformID = p.PlatformID
+            JOIN Sat_PostDetails spd ON hp.PostID = spd.PostID
+            WHERE 1=1
+        """
+        params = {}
+
+        if start_date:
+            query += " AND hp.Timestamp >= :start_date"
+            params['start_date'] = start_date
+        if end_date:
+            query += " AND hp.Timestamp <= :end_date"
+            params['end_date'] = end_date
+        if topic:
+            query += " AND spd.PostContent LIKE :keyword"
+            params['keyword'] = f"%{topic}%"
+
+        # Execute the query
+        with db_engine.connect() as connection:
+            result = connection.execute(text(query), params)
+            rows = result.fetchall()
+            column_names = result.keys()
+
+        # Convert rows to DataFrame
+        data = pd.DataFrame(rows, columns=column_names)
+
+        # Preprocess data
+        data["createdAt"] = pd.to_datetime(data["createdAt"], errors="coerce").dt.tz_localize(None)
+        metrics = ["retweetCount", "replyCount", "likeCount"]
+        for metric in metrics:
+            data[metric] = pd.to_numeric(data[metric], errors="coerce").fillna(0).astype(int)
+
+        # Group by date and calculate metrics
+        numeric_columns = data.select_dtypes(include=['number']).columns  # Select only numeric columns
+        grouped_data = data.groupby(data["createdAt"].dt.date)[numeric_columns].sum().reset_index()
+
+        # Rename the date column for clarity
+        grouped_data.rename(columns={"createdAt": "date"}, inplace=True)
+
+        # Return the result as JSON
+        return jsonify(grouped_data.to_dict(orient='records')), 200
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
 # TOP TOPICS SECTION 
 
 @app.route('/api/trend_analysis', methods=['POST'])
@@ -398,49 +467,7 @@ def top_topics():
         return jsonify({"error": str(e)}), 500
 
 
-# TOPIC MODELLING SECTION   
-
-@app.route('/process_csv', methods=['POST'])
-def process_csv():
-    
-
-
-    try:
-        csv_file = request.files['file']
-        df = pd.read_csv(csv_file)
-
-        # Preprocess data
-        df = pipeline.preprocess_data(df)
-        print(f"Preprocessed DataFrame size: {len(df)}")
-        print(df.head())
-
-        # Generate embeddings
-        texts = df['comment'].tolist()
-        embeddings = pipeline.generate_embeddings(texts)
-
-        # Debugging logs
-        print(f"Number of comments: {len(texts)}")
-        print(f"Embeddings shape: {embeddings.shape}")
-
-        # Validate embeddings
-        if embeddings.shape[0] != len(texts):
-            return jsonify({'error': f'Embeddings count ({embeddings.shape[0]}) does not match document count ({len(texts)}).'}), 400
-
-        # Fit pipeline
-        df, topic_info_dict, _ = pipeline.fit_transform(df, embeddings=embeddings)
-
-        response = {
-            'topics': topic_info_dict.get('labels', []),
-            'sizes': topic_info_dict.get('size', []),
-            'keywords': topic_info_dict.get('keywords', [])
-        }
-
-        return jsonify(response)
-    except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({'error': str(e)}), 500
-
-
+# TOPIC MODELLING SECTION
 
 @app.route('/topic_modeling', methods=['POST'])
 def topic_modeling():
@@ -548,6 +575,48 @@ def topic_modeling():
 
 
 
+"""
+@app.route('/process_csv', methods=['POST'])
+def process_csv():
+
+
+
+    try:
+        csv_file = request.files['file']
+        df = pd.read_csv(csv_file)
+
+        # Preprocess data
+        df = pipeline.preprocess_data(df)
+        print(f"Preprocessed DataFrame size: {len(df)}")
+        print(df.head())
+
+        # Generate embeddings
+        texts = df['comment'].tolist()
+        embeddings = pipeline.generate_embeddings(texts)
+
+        # Debugging logs
+        print(f"Number of comments: {len(texts)}")
+        print(f"Embeddings shape: {embeddings.shape}")
+
+        # Validate embeddings
+        if embeddings.shape[0] != len(texts):
+            return jsonify({'error': f'Embeddings count ({embeddings.shape[0]}) does not match document count ({len(texts)}).'}), 400
+
+        # Fit pipeline
+        df, topic_info_dict, _ = pipeline.fit_transform(df, embeddings=embeddings)
+
+        response = {
+            'topics': topic_info_dict.get('labels', []),
+            'sizes': topic_info_dict.get('size', []),
+            'keywords': topic_info_dict.get('keywords', [])
+        }
+
+        return jsonify(response)
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+"""
 
 
 # GET RECOMMENDATIONS FROM NEWSAPI
@@ -561,7 +630,7 @@ def recommend_news():
 
         top_topics_df = get_top_topics(df, column="comment", top_n=3)
 
-        api_key = "------ADD API KEY HERE ---------"
+        api_key = '--INSERT KEY HERE ----'
         recommendations = recommend_news_from_api(top_topics_df, api_key)
         topic_urls_dict = {item[0]: item[1] for item in recommendations}
 
