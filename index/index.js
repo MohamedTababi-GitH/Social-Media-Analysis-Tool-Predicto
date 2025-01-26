@@ -217,7 +217,7 @@ async function handlePlatformChange() {
               topic: topic,
               start_date: startDate,
               end_date: endDate,
-              //limit: 100,
+              limit: 100,
           };
           break;
       case 'Reddit':
@@ -296,6 +296,34 @@ function validateDates(startDate, endDate) {
 
 ///////// SENTIMENT SECTION ///////////
 let sentChartInstance;
+
+function createPlaceholderSentimentChart() {
+  const ctx = document.getElementById('sentimentalChart').getContext('2d');
+  sentChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: ['Placeholder'],
+          datasets: [
+              { label: 'Positive', data: [0], borderColor: 'green', borderWidth: 2 },
+              { label: 'Neutral', data: [0], borderColor: 'gray', borderWidth: 2 },
+              { label: 'Negative', data: [0], borderColor: 'red', borderWidth: 2 },
+          ],
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+              legend: { position: 'top' },
+              tooltip: { mode: 'index', intersect: false },
+          },
+          scales: {
+              x: { title: { display: true, text: 'Time' } },
+              y: { title: { display: true, text: 'Mentions' } },
+          },
+      },
+  });
+}
+
 
 async function analyzeSentiment() {
   // Get input values
@@ -557,44 +585,202 @@ sentChartInstance= new Chart(document.getElementById('sentimentalChart'), {
   } 
   }
 });
+
+document.addEventListener('DOMContentLoaded', createPlaceholderSentimentChart);
 //*/
+
+//////////////// METRICS SECTION //////////////////
+document.addEventListener('DOMContentLoaded', () => {
+  let engagementChartInstance; // Chart instance tracker
+  const ctx = document.getElementById('engagementChart').getContext('2d');
+
+  // Placeholder Chart
+  function createPlaceholderChart() {
+    const placeholderData = {
+      labels: [''],
+      datasets: [
+        {
+          label: 'Retweets',
+          data: [],
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: 'Replies',
+          data: [],
+          borderColor: 'rgb(54, 235, 22)',
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: 'Likes',
+          data: [],
+          borderColor: 'rgb(236, 19, 110)',
+          borderWidth: 2,
+          fill: false,
+        },
+      ],
+    };
+
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { title: { display: true, text: 'Date' } },
+        y: { title: { display: true, text: 'Engagement Count' } },
+      },
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: { mode: 'index', intersect: false },
+      },
+    };
+
+    if (engagementChartInstance) {
+      engagementChartInstance.destroy();
+    }
+
+    engagementChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: placeholderData,
+      options: options,
+    });
+  }
+
+  // Update Chart with New Data
+  async function updateChart(data) {
+    const labels = data.map(item => item.date);
+    const retweetData = data.map(item => item.retweetCount);
+    const replyData = data.map(item => item.replyCount);
+    const likeData = data.map(item => item.likeCount);
+
+    const newData = {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Retweets',
+          data: retweetData,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: 'Replies',
+          data: replyData,
+          borderColor: 'rgb(54, 235, 22)',
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: 'Likes',
+          data: likeData,
+          borderColor: 'rgb(236, 19, 110)',
+          borderWidth: 2,
+          fill: false,
+        },
+      ],
+    };
+
+    if (engagementChartInstance) {
+      engagementChartInstance.destroy();
+    }
+
+    engagementChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: newData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { title: { display: true, text: 'Date' } },
+          y: { title: { display: true, text: 'Engagement Count' } },
+        },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: { mode: 'index', intersect: false },
+        },
+      },
+    });
+  }
+
+  // Analyze Metrics
+  async function analyzeMetrics() {
+    const startDate = document.getElementById('start-date-metric').value;
+    const endDate = document.getElementById('end-date-metric').value;
+    const keyword = document.getElementById('topic-metric').value;
+
+    if (!startDate || !endDate || !keyword) {
+      alert('Please fill in all fields before analyzing.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/analyze_metrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start_date: startDate, end_date: endDate, keyword: keyword }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Received Data:', data);
+      updateChart(data);
+    } catch (error) {
+      console.error('Error analyzing metrics:', error);
+      alert(`Failed to analyze metrics: ${error.message}`);
+    }
+  }
+
+  document.getElementById('analyze-btn').addEventListener('click', analyzeMetrics);
+  createPlaceholderChart();
+});
+
+
+
+
+
 
 
 ////////////// TOPIC MODELLING SECTION ////////////
 //get timeframe for **topic modelling section**
 
-document.getElementById("uploadForm").addEventListener("submit", async (e) => {
-  e.preventDefault(); 
-  const fileInput = document.getElementById("csvFile");
-  if (fileInput.files.length === 0) {
-    alert("Please choose a file to upload.");
-    return;
-  }
-  const formData = new FormData();
-  formData.append("file", fileInput.files[0]);
-  try {
-    document.getElementById("topicsParent").innerHTML = '<p>Processing... Please wait.</p>';
-    const response = await fetch("http://localhost:5000/process_csv", {
-      method: "POST",
-      body: formData,
-    });
-    if (!response.ok) {
-      const errorData = await response.json();
-      alert(`Error: ${errorData.error}`);
-      return;
+async function topicModeling(){
+
+    let startDate= document.getElementById(`start-date-topic`).value;
+    let endDate= document.getElementById(`end-date-topic`).value;
+    let topic= document.getElementById(`topic-topic`).value;
+    let platformName= document.getElementById(`platform-topic`).value;
+
+
+    //const formData = new FormData();
+    //formData.append("file", fileInput.files[0]);
+    try {
+        document.getElementById("topicsParent").innerHTML = '<p>Processing... Please wait.</p>';
+        const response = await fetch("http://localhost:5000/topic_modeling", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({start_date: startDate,end_date: endDate,topic:topic,platforms: platformName})
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            alert(`Error: ${errorData.error}`);
+            return;
+        }
+        const data = await response.json();
+        console.log("Data received from backend:", data);
+
+        renderTopicsChart(data.topics, data.sizes, data.keywords);
+
+    } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred while processing the file.");
     }
-    const data = await response.json();
-    console.log("Data received from backend:", data);
-    if (data.error) {
-      alert(`Error: ${data.error}`);
-    } else {
-      renderTopicsChart(data.topics, data.sizes, data.keywords);
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    alert("An error occurred while processing the file.");
-  }
-});
+
+
+}
 
 
 function renderTopicsChart(topics, sizes, keywords) {
@@ -686,7 +872,7 @@ function renderPlaceholderChart() {
       ],
     },
     options: {
-      resonsive:true,
+      responsive:true,
       maintainAspectRatio: false,
       plugins: {
         tooltip: {
@@ -718,7 +904,10 @@ function renderPlaceholderChart() {
     },
   });
 }
-renderPlaceholderChart();
+document.addEventListener("DOMContentLoaded", () => {
+  renderPlaceholderChart();
+});
+
 
 
 ////////// TOP TOPICS SECTION //////////////
@@ -1056,7 +1245,9 @@ function initializeChart() {
       },
   });
 }
-initializeChart();
+document.addEventListener("DOMContentLoaded", () => {
+initializeChart();});
+
 
 
 function validateDates(startDate, endDate) {
@@ -1073,42 +1264,55 @@ function validateDates(startDate, endDate) {
 
 
 // NEWS API SECTION
-document.getElementById("newsUploadForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const fileInput = document.getElementById("newsCsvFile");
-  const file = fileInput.files[0];
-  if (!file) {
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("newsUploadForm");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault(); // Prevent form submission and page refresh
+
+    const fileInput = document.getElementById("newsCsvFile");
+    const file = fileInput.files[0];
+    if (!file) {
       alert("Please select a file to upload.");
       return;
-  }
-  const formData = new FormData();
-  formData.append("file", file);
-  try {
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
       const response = await fetch("http://127.0.0.1:5000/recommend_news", {
-          method: "POST",
-          body: formData,
+        method: "POST",
+        body: formData,
       });
-      const data = await response.json();
-      if (response.ok) {
-          console.log("Recommendations received:", data.recommendations);
-          // populate the recommendations into a table
-          populateNewsTable(data.recommendations);
-      } else {
-          console.error("Error fetching recommendations:", data.error);
-          alert(data.error);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error fetching recommendations:", errorData.error);
+        alert(errorData.error);
+        return;
       }
-  } catch (error) {
+
+      const data = await response.json();
+      console.log("Recommendations received:", data.recommendations);
+
+      // Populate the recommendations into a table
+      populateNewsTable(data.recommendations);
+    } catch (error) {
       console.error("An error occurred:", error);
       alert("An unexpected error occurred while fetching recommendations.");
-  }
+    }
+  });
 });
+
 function populateNewsTable(recommendations) {
   const table = document.getElementById("newsResultsTable");
   table.innerHTML = ""; // Clear the table before populating it
-  if (Object.keys(recommendations).length === 0) {
+
+  if (!recommendations || Object.keys(recommendations).length === 0) {
     table.innerHTML = '<tr><td colspan="2">No recommendations available.</td></tr>';
     return;
   }
+
   // Add table headers
   const headerRow = `
       <tr>
@@ -1116,12 +1320,11 @@ function populateNewsTable(recommendations) {
           <th>Recommended Articles</th>
       </tr>`;
   table.innerHTML += headerRow;
+
   // Loop through topics and URLs
   for (const [topic, urls] of Object.entries(recommendations)) {
     const articleLinks = urls
-      .map(
-        (url) => `<a href="${url}" target="_blank">${url}</a>`
-      )
+      .map((url) => `<a href="${url}" target="_blank">${url}</a>`)
       .join("<br>");
     const rowHTML = `
           <tr>

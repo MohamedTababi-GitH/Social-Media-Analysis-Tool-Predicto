@@ -103,8 +103,8 @@ def recommend_news_from_api(topics_df, api_key):
             domains='bbc.co.uk,techcrunch.com',
             language="en",
             sort_by="relevancy",
-            from_param="2024-12-19",  # Adjusted start date
-            to="2025-01-16",
+            from_param="2025-12-20",  # Adjusted start date
+            to="2025-01-17",
             page_size=10
         )
 
