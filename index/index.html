@@ -5,10 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Page</title>
-    <link rel="stylesheet" href="style.css">
+    <!--<link rel="stylesheet" href="style.css"> -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- modified-->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
-    <script defer src="index.js"></script>
+    <!--<script defer src="index.js"></script> -->
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
+
+
 </head>
 
 <body>
@@ -30,10 +37,11 @@
         <div class="hero-content">
             <h1 class="title">Predicto!</h1>
             <p class="tagline">See the Trends. Sense the Sentiment. Shape the Future.</p>
-            <img class="logo_sources_small" src="img/Reddit_Icon_FullColor.png">
-            <img class="logo_sources_small" src="img/bluesky-icon.png">
-            <img class="logo_sources" src="img/yt_logo_rgb_dark.png">
-            <img class="logo_sources_small" src="img/Xlogo-white.png">
+            <img class="logo_sources_small" src="{{ url_for('static', filename='img/Reddit_Icon_FullColor.png') }}" alt="Reddit Icon">
+            <img class="logo_sources_small" src="{{ url_for('static', filename='img/bluesky-icon.png') }}" alt="Bluesky Icon">
+            <img class="logo_sources" src="{{ url_for('static', filename='img/yt_logo_rgb_dark.png') }}" alt="YouTube Logo">
+            <img class="logo_sources_small" src="{{ url_for('static', filename='img/Xlogo-white.png') }}" alt="X Logo">
+            
 
         </div>
     </section>
@@ -465,7 +473,8 @@
 
     <!-- Icon -->
     <div class="top-icon">
-        <img src="img/main.png" alt="Icon">
+        <img src="{{ url_for('static', filename='img/main.png') }}" alt="Icon">
+
     </div>
 </body>
 </html>

@@ -297,6 +297,34 @@ function validateDates(startDate, endDate) {
 ///////// SENTIMENT SECTION ///////////
 let sentChartInstance;
 
+function createPlaceholderSentimentChart() {
+  const ctx = document.getElementById('sentimentalChart').getContext('2d');
+  sentChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: ['Placeholder'],
+          datasets: [
+              { label: 'Positive', data: [0], borderColor: 'green', borderWidth: 2 },
+              { label: 'Neutral', data: [0], borderColor: 'gray', borderWidth: 2 },
+              { label: 'Negative', data: [0], borderColor: 'red', borderWidth: 2 },
+          ],
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+              legend: { position: 'top' },
+              tooltip: { mode: 'index', intersect: false },
+          },
+          scales: {
+              x: { title: { display: true, text: 'Time' } },
+              y: { title: { display: true, text: 'Mentions' } },
+          },
+      },
+  });
+}
+
+
 async function analyzeSentiment() {
   // Get input values
   const startDate = document.getElementById('start-date-sentiment').value;
@@ -557,6 +585,8 @@ sentChartInstance= new Chart(document.getElementById('sentimentalChart'), {
   } 
   }
 });
+
+document.addEventListener('DOMContentLoaded', createPlaceholderSentimentChart);
 //*/
 
 //////////////// METRICS SECTION //////////////////
@@ -842,7 +872,7 @@ function renderPlaceholderChart() {
       ],
     },
     options: {
-      resonsive:true,
+      responsive:true,
       maintainAspectRatio: false,
       plugins: {
         tooltip: {
@@ -874,7 +904,10 @@ function renderPlaceholderChart() {
     },
   });
 }
-renderPlaceholderChart();
+document.addEventListener("DOMContentLoaded", () => {
+  renderPlaceholderChart();
+});
+
 
 
 ////////// TOP TOPICS SECTION //////////////
@@ -1212,7 +1245,9 @@ function initializeChart() {
       },
   });
 }
-initializeChart();
+document.addEventListener("DOMContentLoaded", () => {
+initializeChart();});
+
 
 
 function validateDates(startDate, endDate) {
@@ -1229,42 +1264,55 @@ function validateDates(startDate, endDate) {
 
 
 // NEWS API SECTION
-document.getElementById("newsUploadForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const fileInput = document.getElementById("newsCsvFile");
-  const file = fileInput.files[0];
-  if (!file) {
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("newsUploadForm");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault(); // Prevent form submission and page refresh
+
+    const fileInput = document.getElementById("newsCsvFile");
+    const file = fileInput.files[0];
+    if (!file) {
       alert("Please select a file to upload.");
       return;
-  }
-  const formData = new FormData();
-  formData.append("file", file);
-  try {
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
       const response = await fetch("http://127.0.0.1:5000/recommend_news", {
-          method: "POST",
-          body: formData,
+        method: "POST",
+        body: formData,
       });
-      const data = await response.json();
-      if (response.ok) {
-          console.log("Recommendations received:", data.recommendations);
-          // populate the recommendations into a table
-          populateNewsTable(data.recommendations);
-      } else {
-          console.error("Error fetching recommendations:", data.error);
-          alert(data.error);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error fetching recommendations:", errorData.error);
+        alert(errorData.error);
+        return;
       }
-  } catch (error) {
+
+      const data = await response.json();
+      console.log("Recommendations received:", data.recommendations);
+
+      // Populate the recommendations into a table
+      populateNewsTable(data.recommendations);
+    } catch (error) {
       console.error("An error occurred:", error);
       alert("An unexpected error occurred while fetching recommendations.");
-  }
+    }
+  });
 });
+
 function populateNewsTable(recommendations) {
   const table = document.getElementById("newsResultsTable");
   table.innerHTML = ""; // Clear the table before populating it
-  if (Object.keys(recommendations).length === 0) {
+
+  if (!recommendations || Object.keys(recommendations).length === 0) {
     table.innerHTML = '<tr><td colspan="2">No recommendations available.</td></tr>';
     return;
   }
+
   // Add table headers
   const headerRow = `
       <tr>
@@ -1272,12 +1320,11 @@ function populateNewsTable(recommendations) {
           <th>Recommended Articles</th>
       </tr>`;
   table.innerHTML += headerRow;
+
   // Loop through topics and URLs
   for (const [topic, urls] of Object.entries(recommendations)) {
     const articleLinks = urls
-      .map(
-        (url) => `<a href="${url}" target="_blank">${url}</a>`
-      )
+      .map((url) => `<a href="${url}" target="_blank">${url}</a>`)
       .join("<br>");
     const rowHTML = `
           <tr>

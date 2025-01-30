@@ -14,12 +14,13 @@ import pandas as pd
 from docx import Document
 import re
 import numpy as np
+from flask import render_template
 
 
 
 
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='index', static_folder='index')
 CORS(app)
 
 # PIPELINE INIT
@@ -29,8 +30,16 @@ eps=0.8,
 min_samples=5, 
 nr_topics=10, 
 log_level='INFO',
-openai_api_key='---INSERT KEY HERE------'
+openai_api_key='----ADD KEY HERE------'
 )
+
+
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+
 
 def extract_subreddit_from_url(url):
     match = re.search(r"reddit\.com/r/([a-zA-Z0-9_]+)", url)
@@ -630,7 +639,7 @@ def recommend_news():
 
         top_topics_df = get_top_topics(df, column="comment", top_n=3)
 
-        api_key = '--INSERT KEY HERE ----'
+        api_key = '-----------ADD KEY HERE-------------'
         recommendations = recommend_news_from_api(top_topics_df, api_key)
         topic_urls_dict = {item[0]: item[1] for item in recommendations}
 
@@ -643,5 +652,5 @@ def recommend_news():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
     handler = API_Handler()
+    app.run(host='0.0.0.0', port=5000, debug=False)
